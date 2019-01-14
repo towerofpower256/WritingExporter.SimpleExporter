@@ -109,6 +109,8 @@ namespace WritingExporter.SimpleExporter
             tbStoryUrl.Text = story.Url;
             tbStoryUrl.ReadOnly = true;
             EnableFetchStoryButton(true);
+
+            log.InfoFormat("Story opened: {0}", story.UrlID);
         }
 
         private async void OpenStoryFromSource()
@@ -116,13 +118,14 @@ namespace WritingExporter.SimpleExporter
             try
             {
                 UpdateStatusMessage("Getting basic story information");
+                log.InfoFormat("Opening story from Writing.com");
 
                 WritingClient wc = GetWritingClient();
 
                 var story = await wc.GetInteractive(new Uri(tbStoryUrl.Text));
 
                 // Got the story, lets ready the form
-                UpdateStatusMessage("Got the basic story information, press GET STORY to get the rest");
+                UpdateStatusMessage("Got the basic story information, press \'Update story from Writing.com\' to get the rest");
 
                 _OpenStory(story);
             }
@@ -144,6 +147,7 @@ namespace WritingExporter.SimpleExporter
                 ofd.ValidateNames = true;
                 if (ofd.ShowDialog() == DialogResult.OK)
                 {
+                    log.Info("Opening story from file");
                     story = StoryFileHelperJson.DeserializeInteractiveStory(File.ReadAllText(ofd.FileName));
 
                     _OpenStory(story);
@@ -166,6 +170,8 @@ namespace WritingExporter.SimpleExporter
 
             var newTask = new Task(async () =>
             {
+                log.Info("Updating story content from Writing.com");
+
                 var wc = GetWritingClient();
                 var storyExporter = new WStoryExporter(wc);
                 StoryExporter = storyExporter;
@@ -176,6 +182,8 @@ namespace WritingExporter.SimpleExporter
                     _story = await storyExporter.ExportStory(_story, new WStoryExporterExportSettings());
 
                     EnableSaveButton(true); // Only enable the SAVE button if no exception was thrown
+
+                    log.Info("Story update complete");
                 }
                 catch (Exception ex)
                 {
@@ -221,6 +229,7 @@ namespace WritingExporter.SimpleExporter
 
         // debug function, just save the story as a binary file.
         // I'm going to use this file to test the Story2Html converter
+        [Obsolete]
         public void SaveStoryFileBinary()
         {
             var sfd = new SaveFileDialog();
@@ -254,6 +263,7 @@ namespace WritingExporter.SimpleExporter
                 {
                     StoryFileHelperJson.SaveInteractiveStory(sfd.FileName, _story);
                     UpdateStatusMessage("Story saved to file");
+                    log.Info("Story saved to file");
                 }
             }
             catch (Exception ex)
@@ -291,9 +301,12 @@ namespace WritingExporter.SimpleExporter
                         string args = $"/select,\"{sfd.FileName}\"";
                         Process.Start("explorer", args);
                     }
+
+                    UpdateStatusMessage("Story exported to HTML");
+                    log.Info("Story exported to HTML");
                 }
 
-                UpdateStatusMessage("Story exported to HTML");
+                
             }
             catch (Exception ex)
             {
@@ -305,6 +318,7 @@ namespace WritingExporter.SimpleExporter
 
         // Open a story file, then export it
         // Instead of having to re-download the whole story again
+        [Obsolete]
         public void ExportStoryFromFile()
         {
             UpdateStatusMessage("Exporting story from file to HTML");

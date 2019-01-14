@@ -132,7 +132,7 @@ namespace WritingExporter.SimpleExporter
             // Check for a failed login
             string contentString = await response.Content.ReadAsStringAsync();
             if (FailedLoginRegex.IsMatch(contentString))
-                throw new Exception("Login failed");
+                throw new Exception("Writing.com login failed");
             
 
         }
