@@ -23,12 +23,13 @@ It may require the .NET framework to be up-to-date.
 4. Check that the story info is the story that you want.
 5. To get the story content, click on "Update story from Writing.com". This may take some time depending on how mnay chapters the story has.
 
-![](https://github.com/towerofpower256/WritingExporter.SimpleExporter/blob/master/doc/howto-3-getstory.jpg)
+![](https://github.com/towerofpower256/WritingExporter.SimpleExporter/blob/master/doc/howto-3-gettingstory.jpg)
 
 6. When you hear a "ding", the story's content has been retrieved, and can now be saved or exported.
 
 ![](https://github.com/towerofpower256/WritingExporter.SimpleExporter/blob/master/doc/howto-4-gotstory.jpg)
 
 7. To export a loaded story, click on "Export story".
+
 ![](https://github.com/towerofpower256/WritingExporter.SimpleExporter/blob/master/doc/howto-5-exportstory.jpg)
 
