@@ -11,8 +11,8 @@ It may require the .NET framework to be up-to-date.
 
 ## Usage
 
-1. Open the Application
-[[https://github.com/towerofpower256/WritingExporter.SimpleExporter/blob/master/doc/howto-1-start.jpg]]
+1. Open the application
+![](https://github.com/towerofpower256/WritingExporter.SimpleExporter/blob/master/doc/howto-1-start.jpg)
 
 2. Enter your Writing.com credentials. If you don't have a Writing.com account, sign up for a free one.
 3. Click "Open story from Writing.com"
