@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -25,7 +25,7 @@ namespace WritingExporter.SimpleExporter
         private static string STORY_EXPORT_DIALOG_SUFFIX = "html";
         private static string STORY_EXPORT_DIALOG_FILTER = "Story export (*.html)|*.html";
 
-
+        private string LastFileDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         private WInteractiveStory _story;
         private Task ExportTask;
         private WStoryExporter StoryExporter;
@@ -143,12 +143,14 @@ namespace WritingExporter.SimpleExporter
 
                 var ofd = new OpenFileDialog();
                 ofd.Filter = STORY_FILE_DIALOG_FILTER;
-                ofd.InitialDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                ofd.InitialDirectory = LastFileDir;
                 ofd.ValidateNames = true;
                 if (ofd.ShowDialog() == DialogResult.OK)
                 {
                     log.Info("Opening story from file");
+                    
                     story = StoryFileHelperJson.DeserializeInteractiveStory(File.ReadAllText(ofd.FileName));
+                    LastFileDir = Path.GetDirectoryName(ofd.FileName);
 
                     _OpenStory(story);
 
@@ -234,7 +236,7 @@ namespace WritingExporter.SimpleExporter
         {
             var sfd = new SaveFileDialog();
             sfd.Filter = "Binary (*.bin)|*.bin";
-            sfd.InitialDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            sfd.InitialDirectory = LastFileDir;
             sfd.FileName = $"{_story.UrlID}.bin";
             sfd.ValidateNames = true;
             sfd.OverwritePrompt = true;
@@ -245,6 +247,8 @@ namespace WritingExporter.SimpleExporter
                     BinaryFormatter bf = new BinaryFormatter();
                     bf.Serialize(fs, _story);
                     UpdateStatusMessage("Story saved to file");
+
+                    LastFileDir = Path.GetDirectoryName(sfd.FileName);
                 }
             }
         }
@@ -255,13 +259,14 @@ namespace WritingExporter.SimpleExporter
             {
                 var sfd = new SaveFileDialog();
                 sfd.Filter = STORY_FILE_DIALOG_FILTER;
-                sfd.InitialDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                sfd.InitialDirectory = LastFileDir;
                 sfd.FileName = $"{_story.UrlID}.{STORY_FILE_DIALOG_SUFFIX}";
                 sfd.ValidateNames = true;
                 sfd.OverwritePrompt = true;
                 if (sfd.ShowDialog() == DialogResult.OK)
                 {
                     StoryFileHelperJson.SaveInteractiveStory(sfd.FileName, _story);
+                    LastFileDir = Path.GetDirectoryName(sfd.FileName);
                     UpdateStatusMessage("Story saved to file");
                     log.Info("Story saved to file");
                 }
@@ -282,7 +287,7 @@ namespace WritingExporter.SimpleExporter
             {
                 var sfd = new SaveFileDialog();
                 sfd.Filter = STORY_EXPORT_DIALOG_FILTER;
-                sfd.InitialDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                sfd.InitialDirectory = LastFileDir;
                 sfd.FileName = $"{story.UrlID}.{STORY_EXPORT_DIALOG_SUFFIX}";
                 sfd.ValidateNames = true;
                 sfd.OverwritePrompt = true;
@@ -302,6 +307,7 @@ namespace WritingExporter.SimpleExporter
                         Process.Start("explorer", args);
                     }
 
+                    LastFileDir = Path.GetDirectoryName(sfd.FileName);
                     UpdateStatusMessage("Story exported to HTML");
                     log.Info("Story exported to HTML");
                 }
@@ -329,7 +335,7 @@ namespace WritingExporter.SimpleExporter
             {
                 var ofd = new OpenFileDialog();
                 ofd.Filter = STORY_FILE_DIALOG_FILTER;
-                ofd.InitialDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                ofd.InitialDirectory = LastFileDir;
                 ofd.ValidateNames = true;
                 if (ofd.ShowDialog() == DialogResult.OK)
                 {
@@ -340,6 +346,8 @@ namespace WritingExporter.SimpleExporter
                     }
 
                     ExportStory(_story);
+
+                    LastFileDir = Path.GetDirectoryName(ofd.FileName);
                 }
             }
             catch (Exception ex)
