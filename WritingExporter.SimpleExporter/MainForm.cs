@@ -184,8 +184,6 @@ namespace WritingExporter.SimpleExporter
 
                     await storyExporter.ExportStory(_story, new WStoryExporterExportSettings());
 
-                    EnableSaveButton(true); // Only enable the SAVE button if no exception was thrown
-
                     log.Info("Story update complete");
                 }
                 catch (Exception ex)
@@ -196,6 +194,7 @@ namespace WritingExporter.SimpleExporter
                 }
                 finally
                 {
+                    EnableSaveButton(true);
                     EnableOpenStoryButton(true);
                     EnableFetchStoryButton(true);
                     EnableCancelButton(false);
