@@ -320,8 +320,10 @@
             // lblExportStatusMessage
             // 
             this.lblExportStatusMessage.Name = "lblExportStatusMessage";
-            this.lblExportStatusMessage.Size = new System.Drawing.Size(88, 17);
+            this.lblExportStatusMessage.Size = new System.Drawing.Size(670, 17);
+            this.lblExportStatusMessage.Spring = true;
             this.lblExportStatusMessage.Text = "Status message";
+            this.lblExportStatusMessage.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // MainForm
             // 
