@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
 using WritingExporter.SimpleExporter.Exceptions;
-using WritingExporter.SimpleExporter.Models; 
+using WritingExporter.SimpleExporter.Models;
 
 namespace WritingExporter.SimpleExporter
 {

@@ -16,5 +16,6 @@ namespace WritingExporter.SimpleExporter.Models
         public List<WInteractiveChapter> Chapters { get; set; } = new List<WInteractiveChapter>();
         public DateTime LastUpdated { get; set; }
         public DateTime LastSynced { get; set; }
+        public bool HasChanged { get; set; }
     }
 }

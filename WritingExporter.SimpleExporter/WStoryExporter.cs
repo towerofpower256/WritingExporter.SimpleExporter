@@ -39,6 +39,7 @@ namespace WritingExporter.SimpleExporter
         private WritingClient _wc;
         private WInteractiveStory _story;
         private CancellationTokenSource _cancelTokenSource;
+        private WStoryExporterProgress _progress;
 
         public bool IsExporting { get; private set; }
 
@@ -50,12 +51,24 @@ namespace WritingExporter.SimpleExporter
             Init();
         }
 
+        private string GetStateUpdateMsg(string msg)
+        {
+            if (_progress != null)
+            {
+                return string.Format($"({_progress.ProgressIndex + 1}/{_progress.ProgressMax}) {msg}");
+            }
+            else
+            {
+                return msg;
+            }
+        }
+
         private void DoStateUpdate(string msg)
         {
             OnStatusUpdate?.Invoke(this, new WStoryExporterUpdateEventArgs()
             {
                 MessageUpdated = true,
-                Message = msg
+                Message = GetStateUpdateMsg(msg)
             });
         }
 
@@ -64,7 +77,7 @@ namespace WritingExporter.SimpleExporter
             OnStatusUpdate?.Invoke(this, new WStoryExporterUpdateEventArgs()
             {
                 MessageUpdated = true,
-                Message = msg,
+                Message = GetStateUpdateMsg(msg),
                 ProgressUpdated = true,
                 ProgressValue = progressValue,
                 ProgressMax = progressMax
@@ -94,17 +107,20 @@ namespace WritingExporter.SimpleExporter
 
                 // Update all the stories
                 //foreach (var chapter in _story.Chapters)
+                _progress = new WStoryExporterProgress();
+                _progress.ProgressMax = _story.Chapters.Count;
                 for (var i=0; i < _story.Chapters.Count; i++)
                 {
                     // Cancellation support
                     if (cancelToken.IsCancellationRequested)
                         return null;
 
+                    _progress.ProgressIndex = i;
                     var chapter = _story.Chapters[i];
 
                     if (string.IsNullOrEmpty(chapter.Content) || exportSettings.UpdateExisting == true)
                     {
-                        DoStateUpdate($"Exporting chapter: {chapter.Path} ({i + 1}/{_story.Chapters.Count})", i, _story.Chapters.Count);
+                        DoStateUpdate($"Exporting chapter: {chapter.Path}", i, _story.Chapters.Count);
 
                         await UpdateChapter(chapter);
                     }
@@ -112,6 +128,7 @@ namespace WritingExporter.SimpleExporter
 
                 // Done
                 _log.Info("Story export complete");
+                _progress = null;
                 DoStateUpdate("Finished exporting story, ready to save", 1, 1);
                 return _story;
             }
@@ -203,6 +220,7 @@ namespace WritingExporter.SimpleExporter
                 _story.ShortDescription = retrievedStory.ShortDescription;
                 _story.Description = retrievedStory.Description;
                 _story.LastUpdated = DateTime.Now;
+                _story.HasChanged = true;
             }
 
             // Cancellation support
@@ -294,6 +312,7 @@ namespace WritingExporter.SimpleExporter
             //log.Debug("Updating chapter");
             localChapter.LastSynced = DateTime.Now;
 
+            _story.HasChanged = true;
             localChapter.Author = retrievedChapter.Author;
             localChapter.Choices = retrievedChapter.Choices;
             localChapter.Content = retrievedChapter.Content;
@@ -302,6 +321,12 @@ namespace WritingExporter.SimpleExporter
             localChapter.SourceChoiceTitle = retrievedChapter.SourceChoiceTitle;
             localChapter.Title = retrievedChapter.Title;
             localChapter.VersionFoundAt = retrievedChapter.VersionFoundAt;
+        }
+
+        private class WStoryExporterProgress
+        {
+            public int ProgressMax { get; set; }
+            public int ProgressIndex { get; set; }
         }
     }
 }

@@ -123,6 +123,7 @@ namespace WritingExporter.SimpleExporter
                 WritingClient wc = GetWritingClient();
 
                 var story = await wc.GetInteractive(new Uri(tbStoryUrl.Text));
+                story.HasChanged = true;
 
                 // Got the story, lets ready the form
                 UpdateStatusMessage("Got the basic story information, press \'Update story from Writing.com\' to get the rest");
@@ -174,14 +175,14 @@ namespace WritingExporter.SimpleExporter
             {
                 log.Info("Updating story content from Writing.com");
 
-                var wc = GetWritingClient();
-                var storyExporter = new WStoryExporter(wc);
-                StoryExporter = storyExporter;
-                storyExporter.OnStatusUpdate += OnExportUpdate;
-
                 try
                 {
-                    _story = await storyExporter.ExportStory(_story, new WStoryExporterExportSettings());
+                    var wc = GetWritingClient();
+                    var storyExporter = new WStoryExporter(wc);
+                    StoryExporter = storyExporter;
+                    storyExporter.OnStatusUpdate += OnExportUpdate;
+
+                    await storyExporter.ExportStory(_story, new WStoryExporterExportSettings());
 
                     EnableSaveButton(true); // Only enable the SAVE button if no exception was thrown
 
@@ -266,6 +267,7 @@ namespace WritingExporter.SimpleExporter
                 if (sfd.ShowDialog() == DialogResult.OK)
                 {
                     StoryFileHelperJson.SaveInteractiveStory(sfd.FileName, _story);
+                    _story.HasChanged = false;
                     LastFileDir = Path.GetDirectoryName(sfd.FileName);
                     UpdateStatusMessage("Story saved to file");
                     log.Info("Story saved to file");
@@ -516,6 +518,20 @@ namespace WritingExporter.SimpleExporter
         private void btnOpenStoryFile_Click(object sender, EventArgs e)
         {
             OpenStoryFromFile();
+        }
+
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (_story != null && _story.HasChanged)
+            {
+                if (MessageBox.Show(
+                    "There are unsaved changes. Are you sure that you would like to exit without saving the changes?",
+                    "Unsaved changes",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
+                {
+                    e.Cancel = true; // Prevent the form from closing
+                }
+            }
         }
     }
 }
