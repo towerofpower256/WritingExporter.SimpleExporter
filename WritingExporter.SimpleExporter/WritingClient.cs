@@ -67,7 +67,7 @@ namespace WritingExporter.SimpleExporter
             RegexOptions.IgnoreCase
             );
 
-        
+
 
         public WritingClient(WritingClientSettings settings)
         {

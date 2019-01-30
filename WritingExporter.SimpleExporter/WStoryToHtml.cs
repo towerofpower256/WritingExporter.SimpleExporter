@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Reflection;
 using WritingExporter.SimpleExporter.Models;
+using System.Text.RegularExpressions;
 
 namespace WritingExporter.SimpleExporter
 {
@@ -14,6 +15,26 @@ namespace WritingExporter.SimpleExporter
     /// </summary>
     public class WStoryToHtml
     {
+        // Allowed self-closing tags
+        // http://xahlee.info/js/html5_non-closing_tag.html
+        private static string[] ALLOWED_SELF_CLOSING_ELEMENTS =
+        {
+            "area",
+            "base",
+            "br",
+            "col",
+            "embed",
+            "hr",
+            "img",
+            "input",
+            "link",
+            "meta",
+            "param",
+            "source",
+            "track",
+            "wbr",
+        };
+
         private static string[] TEMPLATE_MANIFEST = {
             "Chapter",
             "ChapterChoiceList",
@@ -27,7 +48,6 @@ namespace WritingExporter.SimpleExporter
             };
 
         private static ILogger log = LogManager.GetLogger(typeof(WStoryToHtml));
-        
 
         private Dictionary<string, string> Templates = new Dictionary<string, string>();
 
@@ -106,6 +126,12 @@ namespace WritingExporter.SimpleExporter
             {
                 log.DebugFormat("Adding chapter {0}", chapter.Path);
 
+                //DEBUG
+                if (chapter.Path == "1131222")
+                {
+                    var lolwut = "test";
+                }
+
                 string choiceListBlock = "";
 
                 if (chapter.IsEnd)
@@ -133,6 +159,11 @@ namespace WritingExporter.SimpleExporter
                 if (chapter.Path != "1")
                     sourceChoiceLink = string.Format("<a href='#{0}'>Go back</a>", chapter.Path.Substring(0, chapter.Path.Length-1));
 
+                string chapterContentElementsClosed;
+                string chapterContent = CloseUnclosedElements(chapter.Content, out chapterContentElementsClosed);
+                if (!string.IsNullOrEmpty(chapterContentElementsClosed))
+                    log.Debug($"Chapter {chapter.Path} had unclosed HTML elements: {chapterContentElementsClosed}");
+
                 sbChapters.AppendLine(Templates["Chapter"]
                     .Replace("{Path}", chapter.Path)
                     .Replace("{PathDisplay}", StoryOutlineChapterPath(chapter.Path))
@@ -140,7 +171,7 @@ namespace WritingExporter.SimpleExporter
                     .Replace("{SourceChoice}", chapter.Path == "1" ? "(empty)" : chapter.SourceChoiceTitle)
                     .Replace("{SourceChapterLink}", sourceChoiceLink)
                     .Replace("{AuthorName}", chapter.Author.Name)
-                    .Replace("{Content}", chapter.Content)
+                    .Replace("{Content}", chapterContent)
                     .Replace("{Choices}", choiceListBlock)
                     );
             }
@@ -180,6 +211,80 @@ namespace WritingExporter.SimpleExporter
             }
 
             return sb.ToString();
+        }
+
+        // Add closing tags for all unclosed elements
+        // Was running into issues where there were opening HTML elements without a closing element
+        // E.g. <i> without a matching </i> to go with it, and it makes the rest of the story italic
+        public static string CloseUnclosedElements(string html, out string elementsClosed)
+        {
+            var closingElements = new List<string>();
+
+            var foundTagEnds = new Dictionary<string, int>();
+
+            // Regexes for detecting the starts and ends of HTML elements
+            Regex ElementStartRegex = new Regex(@"<[^\/>]+[^\/]?>", RegexOptions.Singleline);
+            Regex ElementEndRegex = new Regex(@"<\/.+?>", RegexOptions.Singleline);
+
+            var elementEndMatches = ElementEndRegex.Matches(html);
+            foreach (var match in elementEndMatches)
+            {
+                string matchString = match.ToString();
+                int matchLength = matchString.Length;
+                string elementName = matchString.Trim('<', '/', '>').Trim(); // Try to just get the element name, '</ div>' to 'div'
+
+                if (foundTagEnds.ContainsKey(elementName))
+                {
+                    foundTagEnds[elementName]++;
+                }
+                else
+                {
+                    foundTagEnds.Add(elementName, 1);
+                }
+            }
+
+            // Look for <something> with extra bits, but not with a forward slash at either the start or the end of the element
+            var elementStartMatches = ElementStartRegex.Matches(html);
+
+            foreach (var match in elementStartMatches)
+            {
+                // For each tag opener, take 1 from the end tag pool.
+                // If there isn't or was never any end tags of this type in the pool,
+                //  a closing tag is needed
+
+                string elementName = match.ToString().TrimStart('<').TrimEnd('>').Split(' ')[0];
+
+                if (foundTagEnds.ContainsKey(elementName))
+                {
+                    if (foundTagEnds[elementName] > 0)
+                    {
+                        // Closing tags of this type have been found, and there are some in the pool.
+                        // Take 1 from the pool and move on
+                        foundTagEnds[elementName]--;
+                    }
+                    else
+                    {
+                        // Closing tags of this type have been found, but there are none left in the pool.
+                        // This means that there were more start tags than closing tags
+                        // Add an end tag
+                        closingElements.Add(string.Format("</{0}>", elementName));
+                    }
+                }
+                else
+                {
+                    // No end tags of this type were ever found.
+                    // Add an end tag
+                    closingElements.Add(string.Format("</{0}>", elementName));
+                }
+            }
+
+            closingElements.Reverse();
+            var sb = new StringBuilder();
+            foreach (var ct in closingElements) sb.Append(ct);
+
+            elementsClosed = sb.ToString(); // Pass the closing elements upwards
+
+            return html + sb.ToString();
         }
     }
 }

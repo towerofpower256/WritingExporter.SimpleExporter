@@ -108,6 +108,7 @@ namespace WritingExporter.SimpleExporter
             // Change the form
             tbStoryUrl.Text = story.Url;
             tbStoryUrl.ReadOnly = true;
+            EnableSaveButton(true);
             EnableFetchStoryButton(true);
 
             log.InfoFormat("Story opened: {0}", story.UrlID);
