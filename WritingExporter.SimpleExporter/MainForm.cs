@@ -66,6 +66,7 @@ namespace WritingExporter.SimpleExporter
             EnableSaveButton(false);
             EnableFetchStoryButton(false);
             EnableOpenStoryButton(true);
+            EnableCredentialFields(true);
 
             UpdateStatusProgress(0);
             UpdateStatusMessage("Open a story to get started");
@@ -116,6 +117,8 @@ namespace WritingExporter.SimpleExporter
 
         private async void OpenStoryFromSource()
         {
+            EnableCredentialFields(false);
+
             try
             {
                 UpdateStatusMessage("Getting basic story information");
@@ -134,6 +137,10 @@ namespace WritingExporter.SimpleExporter
             catch (Exception ex)
             {
                 log.Error("An error occured when trying to get the story info.", ex);
+            }
+            finally
+            {
+                EnableCredentialFields(true); // Always reenable stuff
             }
         }
 
@@ -171,6 +178,7 @@ namespace WritingExporter.SimpleExporter
             EnableOpenStoryButton(false);
             EnableCancelButton(true);
             EnableFetchStoryButton(false);
+            EnableCredentialFields(false);
 
             var newTask = new Task(async () =>
             {
@@ -199,6 +207,7 @@ namespace WritingExporter.SimpleExporter
                     EnableOpenStoryButton(true);
                     EnableFetchStoryButton(true);
                     EnableCancelButton(false);
+                    EnableCredentialFields(true);
                     StoryExporter = null;
 
                     Beep(); // Should we always beep, or just when it completes successfully?
@@ -390,6 +399,19 @@ namespace WritingExporter.SimpleExporter
                 
 
             tbStoryInfo.Text = info;
+        }
+
+        public delegate void EnableCredentialFieldsDelegate(bool enable);
+        public void EnableCredentialFields(bool enable)
+        {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new EnableCredentialFieldsDelegate(EnableCredentialFields), new object[] { enable });
+                return;
+            }
+
+            tbWritingUsername.Enabled = enable;
+            tbWritingPassword.Enabled = enable;
         }
 
         public delegate void EnableOpenStoryButtonDelegate(bool enable);

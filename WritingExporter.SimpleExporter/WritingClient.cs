@@ -68,7 +68,6 @@ namespace WritingExporter.SimpleExporter
             );
 
 
-
         public WritingClient(WritingClientSettings settings)
         {
             Initialise(settings);
@@ -383,7 +382,8 @@ namespace WritingExporter.SimpleExporter
             return await GetInteractive(interactiveUrl);
         }
 
-        public async Task<WInteractiveStory> GetInteractive(Uri interactiveUrl) {
+        public async Task<WInteractiveStory> GetInteractive(Uri interactiveUrl)
+        {
             
             WInteractiveStory newInteractive = new WInteractiveStory();
             log.DebugFormat("Getting interactive story: {0}", interactiveUrl);
@@ -393,6 +393,22 @@ namespace WritingExporter.SimpleExporter
             //string interactiveHtml = System.IO.File.ReadAllText("test-interactive-cover.html");
             if (IsInteractivesUnavailablePage(interactiveHtml))
                 throw new InteractivesTemporarilyUnavailableException();
+
+            // Detect "Login required" or "access restricted"
+            if (IsLoginPage(interactiveHtml))
+            {
+                // We need to log in, and get the chapter again
+                log.Debug("Login required while trying to get an interactive's details");
+                await LoginAsync();
+
+                // Get it again
+                interactiveHtml = await HttpGetAsyncAsString(interactiveUrl);
+
+                // Check if it's a login again. If it is, login failed
+                if (IsLoginPage(interactiveHtml))
+                    throw new Exception("Failed to login to retrieve interactive details");
+            }
+
 
             // Get the interactive story's title
             // This method grabs it from within the <title> element, not sure if it gets truncated or not.

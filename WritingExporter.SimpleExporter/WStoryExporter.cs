@@ -290,6 +290,8 @@ namespace WritingExporter.SimpleExporter
 
                 try
                 {
+                    DoStateUpdate($"Exporting chapter: {localChapter.Path}");
+
                     retrievedChapter = await _wc.GetInteractiveChapter(chapterUrl);
                     break; // Got the chapter successfully, excape this crude retry loop
                 }
