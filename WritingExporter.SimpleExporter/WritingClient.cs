@@ -277,7 +277,7 @@ namespace WritingExporter.SimpleExporter
 
             // Search for the choice that lead to this chapter
             // This usually has the more fleshed out title, as the legit title can sometimes be truncated
-            Regex chapterSourceChoiceRegex = new Regex(@"(?<=This choice: <b>).*?(?=<\/b>)", RegexOptions.IgnoreCase);
+            Regex chapterSourceChoiceRegex = new Regex(@"(?<=This choice: <b>).*?(?=<\/b>)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
             Match chapterSourceChoiceMatch = chapterSourceChoiceRegex.Match(chapterHtml);
             if (!chapterSourceChoiceMatch.Success && chapterUrlParm != "1") // If we can't find it, and it's not the first chapter
                 throw new Exception("Couldn't find the interactive chapter's source choice, and this isn't the first chapter");
