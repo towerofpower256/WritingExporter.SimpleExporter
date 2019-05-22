@@ -272,7 +272,7 @@ namespace WritingExporter.SimpleExporter
             Regex chapterTitleRegex = new Regex(chapterTitleRegexPattern, RegexOptions.IgnoreCase | RegexOptions.Singleline);
             Match chapterTitleMatch = chapterTitleRegex.Match(chapterHtml);
             if (!chapterTitleMatch.Success)
-                throw new Exception("Couldn't find the interactive chapter's title");
+                throw new Exception($"Couldn't find the chapter title for chapter '{chapterUrl.ToString()}'");
             string chapterTitle = HttpUtility.HtmlDecode(chapterTitleMatch.Value);
 
             // Search for the choice that lead to this chapter
@@ -280,7 +280,7 @@ namespace WritingExporter.SimpleExporter
             Regex chapterSourceChoiceRegex = new Regex(@"(?<=This choice: <b>).*?(?=<\/b>)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
             Match chapterSourceChoiceMatch = chapterSourceChoiceRegex.Match(chapterHtml);
             if (!chapterSourceChoiceMatch.Success && chapterUrlParm != "1") // If we can't find it, and it's not the first chapter
-                throw new Exception("Couldn't find the interactive chapter's source choice, and this isn't the first chapter");
+                throw new Exception($"Couldn't find the interactive chapter's source choice and this isn't the first chapter, for chapter '{chapterUrl.ToString()}'");
             string chapterSourceChoice = HttpUtility.HtmlDecode(chapterSourceChoiceMatch.Value);
 
             // Search for the chapter content, the actual writing
@@ -288,7 +288,7 @@ namespace WritingExporter.SimpleExporter
             Regex chapterContentRegex = new Regex("(?<=<div class=\"KonaBody\">).+?(?=<\\/div>)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
             Match chapterContentMatch = chapterContentRegex.Match(chapterHtml);
             if (!chapterContentMatch.Success)
-                throw new Exception("Couldn't find the interactive chatper's content");
+                throw new Exception($"Couldn't find the content for the interactive chapter '{chapterUrl.ToString()}'");
             string chapterContent = HttpUtility.HtmlDecode(chapterContentMatch.Value);
 
             // Get the author
@@ -296,7 +296,7 @@ namespace WritingExporter.SimpleExporter
             Regex chapterAuthorChunkRegex = new Regex("<a title=\"Username: .*?<\\/a>", RegexOptions.IgnoreCase | RegexOptions.Singleline);
             Match chapterAuthorChunkMatch = chapterAuthorChunkRegex.Match(chapterHtml);
             if (!chapterAuthorChunkMatch.Success)
-                throw new Exception("Couldn't find the HTML chunk containing the author");
+                throw new Exception($"Couldn't find the HTML chunk containing the author for the interactive chapter '{chapterUrl.ToString()}'");
             string chapterAuthorChunk = chapterAuthorChunkMatch.Value;
 
             // Get the author username
@@ -323,7 +323,7 @@ namespace WritingExporter.SimpleExporter
                     RegexOptions.Singleline | RegexOptions.IgnoreCase);
                 Match chapterChoicesChunkMatch = chapterChoicesChunkRegex.Match(chapterHtml);
                 if (!chapterChoicesChunkMatch.Success)
-                    throw new Exception("Couldn't find the HTML chunk containing choices");
+                    throw new Exception($"Couldn't find the HTML chunk containing choices for interactive chapter '{chapterUrl.ToString()}'");
                 string chapterChoicesChunkHtml = chapterChoicesChunkMatch.Value;
 
                 // Then try to get the individual choices
@@ -339,7 +339,7 @@ namespace WritingExporter.SimpleExporter
                     Regex choiceUrlRegex = new Regex("(?<=href=\").+?(?=\")");
                     Match choiceUrlMatch = choiceUrlRegex.Match(match.Value);
                     if (!choiceUrlMatch.Success)
-                        throw new Exception(string.Format("Could not find the URL of a choice: {0}", match.Value));
+                        throw new Exception($"Could not find the URL of choice '{match.Value}' on interactive chapter '{chapterUrl.ToString()}'");
                     choiceUrl = choiceUrlMatch.Value;
 
                     // Get just the numbers from the URL
@@ -415,7 +415,7 @@ namespace WritingExporter.SimpleExporter
             Regex interactiveTitleRegex = new Regex("(?<=<title>).+?(?= - Writing\\.Com<\\/title>)", RegexOptions.IgnoreCase);
             Match interactiveTitleMatch = interactiveTitleRegex.Match(interactiveHtml);
             if (!interactiveTitleMatch.Success)
-                throw new Exception("Couldn't find the interactive title");
+                throw new Exception($"Couldn't find the title for interactive story '{interactiveUrl.ToString()}'");
             string interactiveTitle = HttpUtility.HtmlDecode(interactiveTitleMatch.Value);
 
             // Get the interactive's tagline or short description
@@ -425,7 +425,7 @@ namespace WritingExporter.SimpleExporter
             Regex interactiveShortDescRegex = new Regex("(?<=<META NAME=\"description\" content=\").+?(?=\">)", RegexOptions.IgnoreCase);
             Match interactiveShortDescMatch = interactiveShortDescRegex.Match(interactiveHtml);
             if (!interactiveShortDescMatch.Success)
-                log.Warn("Couldn't find the story short description."); // Just a warning, don't throw an exception over it
+                log.Warn($"Couldn't find the short description for interactive story '{interactiveUrl.ToString()}'"); // Just a warning, don't throw an exception over it
             string interactiveShortDesc = HttpUtility.HtmlDecode(interactiveShortDescMatch.Value);
 
 
@@ -433,7 +433,7 @@ namespace WritingExporter.SimpleExporter
             Regex interactiveDescRegex = new Regex("(?<=<td align=left class=\"norm\">).+?(?=<\\/td>)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
             Match interactiveDescMatch = interactiveDescRegex.Match(interactiveHtml);
             if (!interactiveDescMatch.Success)
-                throw new Exception("Couldn't find the interactive description");
+                throw new Exception($"Couldn't find the description for interactive story '{interactiveUrl.ToString()}'");
             string interactiveDesc = HttpUtility.HtmlDecode(interactiveDescMatch.Value);
 
             // TODO get author, looks like it'll be a pain in the ass telling the chapter author apart from the story author
