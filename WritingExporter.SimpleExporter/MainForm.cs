@@ -195,6 +195,22 @@ namespace WritingExporter.SimpleExporter
 
                     log.Info("Story update complete");
                 }
+                catch (WritingClientHtmlParseException ex)
+                {
+                    log.Error("An error occurred while trying to export the story.", ex);
+                    UpdateStatusMessage("ERROR");
+                    UpdateStatusProgress(0, 1);
+
+                    if (MessageBox.Show(
+                        "An error occurred while trying to parse the HTML response from Writing.com.\n\nWould you like to see the HTML response?",
+                        "HTML Parse Error",
+                        MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation
+                        ) == DialogResult.Yes)
+                    {
+                        var newForm = new TextboxDialogForm(ex.HtmlResult, "HTML Response");
+                        newForm.ShowDialog();
+                    }
+                }
                 catch (Exception ex)
                 {
                     log.Error("An error occurred while trying to export the story.", ex);
