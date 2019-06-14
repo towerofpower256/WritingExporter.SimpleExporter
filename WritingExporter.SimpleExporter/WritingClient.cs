@@ -280,9 +280,6 @@ namespace WritingExporter.SimpleExporter
             Regex chapterSourceChoiceRegex = new Regex(@"(?<=This choice: <b>).*?(?=<\/b>)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
             Match chapterSourceChoiceMatch = chapterSourceChoiceRegex.Match(chapterHtml);
 
-            // DEBUG, always throw error
-            throw new WritingClientHtmlParseException($"Couldn't find the interactive chapter's source choice and this isn't the first chapter, for chapter '{chapterUrl.ToString()}'", chapterHtml);
-
             if (!chapterSourceChoiceMatch.Success && chapterUrlParm != "1") // If we can't find it, and it's not the first chapter
                 throw new WritingClientHtmlParseException($"Couldn't find the interactive chapter's source choice and this isn't the first chapter, for chapter '{chapterUrl.ToString()}'", chapterHtml);
             string chapterSourceChoice = HttpUtility.HtmlDecode(chapterSourceChoiceMatch.Value);

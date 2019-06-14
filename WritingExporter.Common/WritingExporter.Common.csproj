@@ -39,6 +39,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -47,16 +48,26 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BaseWdcClient.cs" />
+    <Compile Include="Exceptions\WritingClientHtmlParseException.cs" />
+    <Compile Include="Exceptions\WritingLoginFailed.cs" />
     <Compile Include="Exceptions\InteractivesTemporarilyUnavailableException.cs" />
+    <Compile Include="ILogFactory.cs" />
     <Compile Include="ILogger.cs" />
+    <Compile Include="IWdcClient.cs" />
+    <Compile Include="Log4NetLogFactory.cs" />
     <Compile Include="Log4NetLogger.cs" />
-    <Compile Include="Models\WAuthor.cs" />
-    <Compile Include="Models\WInteractiveChapter.cs" />
-    <Compile Include="Models\WInteractiveChapterChoice.cs" />
-    <Compile Include="Models\WInteractiveStory.cs" />
+    <Compile Include="LogManager.cs" />
+    <Compile Include="Models\WdcAuthor.cs" />
+    <Compile Include="Models\WdcResponse.cs" />
+    <Compile Include="Models\WdcInteractiveChapter.cs" />
+    <Compile Include="Models\WdcInteractiveChapterChoice.cs" />
+    <Compile Include="Models\WdcInteractiveStory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="WContentStore.cs" />
-    <Compile Include="WContext.cs" />
+    <Compile Include="TinyIoC.cs" />
+    <Compile Include="WdcClient.cs" />
+    <Compile Include="WdcReader.cs" />
+    <Compile Include="WdcUtil.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

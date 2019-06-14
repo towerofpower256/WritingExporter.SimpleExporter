@@ -6,10 +6,9 @@ using System.Threading.Tasks;
 
 namespace WritingExporter.Common
 {
-    // A connection context to Writing.com. Use this to scrape content from Writing.com.
-    // Not thread safe.
-    public class WContext
+    public interface ILogFactory
     {
-        
+        ILogger GetLogger(Type type);
+        ILogger GetLogger(string name);
     }
 }

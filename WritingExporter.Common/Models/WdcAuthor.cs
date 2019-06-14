@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace WritingExporter.Common.Models
 {
-    class WInteractiveChapter
+    [Serializable]
+    public class WdcAuthor
     {
+        public string Name { get; set; }
+        public string Username { get; set; }
     }
 }

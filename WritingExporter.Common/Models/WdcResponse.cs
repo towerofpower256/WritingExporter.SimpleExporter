@@ -6,10 +6,9 @@ using System.Threading.Tasks;
 
 namespace WritingExporter.Common.Models
 {
-    [Serializable]
-    public class WAuthor
+    public class WdcResponse
     {
-        public string Name { get; set; }
-        public string Username { get; set; }
+        public string Address { get; set; }
+        public string WebResponse { get; set; }
     }
 }

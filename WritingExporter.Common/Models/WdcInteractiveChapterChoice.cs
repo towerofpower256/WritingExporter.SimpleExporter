@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace WritingExporter.Common.Models
 {
     [Serializable]
-    public class WInteractiveChapterChoice
+    public class WdcInteractiveChapterChoice
     {
         public string PathLink { get; set; }
         public string Name { get; set; }
