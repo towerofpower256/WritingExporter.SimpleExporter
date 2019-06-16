@@ -13,5 +13,11 @@ namespace WritingExporter.Common
         bool IsInteractivesUnavailablePage(string content);
         bool IsLoginFailedPage(string html);
         bool IsLoginPage(string html);
+        Uri GetPathToRoot();
+        Uri GetPathToLogin();
+        Uri GetPathToInteractive(string storyId);
+        Uri GetPathToInteractiveOutline(string storyId);
+        Uri GetPathToInteractiveRecentAdditions(string storyId);
+        Uri GetPathToInteractiveChapter(string storyId, string chapterId);
     }
 }

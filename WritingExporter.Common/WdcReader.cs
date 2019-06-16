@@ -160,5 +160,26 @@ namespace WritingExporter.Common
         }
 
         // TODO Get chapter list from story outline
+        public async Task<IEnumerable<Uri>> GetInteractiveChapterList(string interactiveID)
+        {
+            var wdcPayload = await wdcClient.GetInteractiveOutline(interactiveID);
+
+            var chapters = new List<Uri>();
+
+            // Find the links to the interactive's pages
+            // Create the regex that will find chapter links
+            // E.g. https:\/\/www\.writing\.com\/main\/interact\/item_id\/1824771-short-stories-by-the-people\/map\/(\d)+
+            string chapterLinkRegexPattern = wdcClient.GetPathToRoot() + string.Format("main/interact/item_id/{0}/map/{1}", interactiveID, @"(\d)+");
+            chapterLinkRegexPattern = WdcUtil.RegexSafeUrl(chapterLinkRegexPattern);
+            Regex chapterLinkRegex = new Regex(chapterLinkRegexPattern, RegexOptions.IgnoreCase);
+            MatchCollection matches = chapterLinkRegex.Matches(wdcPayload.WebResponse);
+
+            foreach (Match match in matches)
+            {
+                chapters.Add(new Uri(match.Value));
+            }
+
+            return chapters.ToArray();
+        }
     }
 }

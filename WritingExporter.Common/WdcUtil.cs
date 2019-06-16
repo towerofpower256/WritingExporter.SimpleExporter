@@ -39,5 +39,13 @@ namespace WritingExporter.Common
             Regex numbersOnlyRegex = new Regex(@"\d+");
             return numbersOnlyRegex.IsMatch(chapterPath);
         }
+
+        /// <summary>
+        /// Things like forward slashes and dots cause shenanigans with regex. This escapes those.
+        /// </summary>
+        public static string RegexSafeUrl(object url)
+        {
+            return url.ToString().Replace(".", "\\.").Replace("/", "\\/");
+        }
     }
 }
