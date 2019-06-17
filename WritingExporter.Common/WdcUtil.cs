@@ -47,5 +47,15 @@ namespace WritingExporter.Common
         {
             return url.ToString().Replace(".", "\\.").Replace("/", "\\/");
         }
+
+        /// <summary>
+        /// Just return whatever is after the last '/' slash
+        /// </summary>
+        public static string GetFinalParmFromUrl(object url)
+        {
+            string urlString = url.ToString();
+            int indexOfSlash = urlString.LastIndexOf('/');
+            return urlString.Substring(indexOfSlash + 1, urlString.Length - indexOfSlash - 1); // Just get the numbers at the end
+        }
     }
 }

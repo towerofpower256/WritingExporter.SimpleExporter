@@ -8,6 +8,8 @@ namespace WritingExporter.Common
 {
     public static class LogManager
     {
+        private const string MSG_EX_NO_FACTORY = "A logger was requested from the log manager, but a logger factory has not been set";
+
         private static ILogFactory _logFactory;
 
         public static void SetLogFactory(ILogFactory logFactory)
@@ -15,8 +17,22 @@ namespace WritingExporter.Common
             _logFactory = logFactory;
         }
 
-        public static ILogger GetLogger(Type type) => _logFactory.GetLogger(type);
-        public static ILogger GetLogger(string name) => _logFactory.GetLogger(name);
+        public static ILogger GetLogger(Type type)
+        {
+            if (_logFactory == null) throw new NullReferenceException(MSG_EX_NO_FACTORY);
+            return _logFactory.GetLogger(type);
+        }
+
+        public static ILogger GetLogger(string name)
+        {
+            if (_logFactory == null) throw new NullReferenceException(MSG_EX_NO_FACTORY);
+            return _logFactory.GetLogger(name);
+        }
+
+        public static bool IsReady()
+        {
+            return _logFactory != null;
+        }
 
         public static void DoLog(object sender, LogEventArgs args)
         {

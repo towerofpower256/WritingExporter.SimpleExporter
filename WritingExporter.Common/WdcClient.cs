@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using WritingExporter.Common.Exceptions;
 using WritingExporter.Common.Models;
@@ -32,15 +33,39 @@ namespace WritingExporter.Common
         private CookieContainer httpCookies;
         private Dictionary<string, string> cookieDict = new Dictionary<string, string>();
         private WContentStoreSettings settings;
+        private CancellationTokenSource cTokenSource;
         
 
         public WdcClient(WContentStoreSettings settings)
         {
             this.settings = settings;
+            cTokenSource = new CancellationTokenSource();
             httpCookies = new CookieContainer();
             httpClientHandler = new HttpClientHandler();
             httpClientHandler.CookieContainer = httpCookies;
             httpClient = new HttpClient(httpClientHandler, true);
+        }
+
+        public void Reset()
+        {
+            log.Debug("Resetting");
+            Cancel();
+            ClearCookies();
+        }
+
+        private void ClearCookies()
+        {
+            log.Debug("Clearing cookies");
+            var newCookieContainer = new CookieContainer();
+
+            httpCookies = newCookieContainer;
+            httpClientHandler.CookieContainer = newCookieContainer;
+        }
+
+        public void Cancel()
+        {
+            log.Debug("Cancelling any activities");
+            cTokenSource.Cancel();
         }
 
         public async Task LoginAsync()
@@ -72,7 +97,7 @@ namespace WritingExporter.Common
 
             // Send the post request
             Uri loginUrl = GetPathToLogin();
-            HttpResponseMessage response = await httpClient.PostAsync(loginUrl, formEncContent);
+            HttpResponseMessage response = await httpClient.PostAsync(loginUrl, formEncContent, cTokenSource.Token);
             response.EnsureSuccessStatusCode();
             // Don't need to handle cookies here, the httpClient has been given its own cookie store.
 
@@ -184,7 +209,7 @@ namespace WritingExporter.Common
 
         private async Task<HttpResponseMessage> HttpGetAsync(Uri urlToGet)
         {
-            HttpResponseMessage response = await httpClient.GetAsync(urlToGet);
+            HttpResponseMessage response = await httpClient.GetAsync(urlToGet, cTokenSource.Token);
             response.EnsureSuccessStatusCode(); // Fail if result is not 200 OK
 
             //UpdateCookies(response);

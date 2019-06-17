@@ -19,5 +19,6 @@ namespace WritingExporter.Common
         Uri GetPathToInteractiveOutline(string storyId);
         Uri GetPathToInteractiveRecentAdditions(string storyId);
         Uri GetPathToInteractiveChapter(string storyId, string chapterId);
+        void Reset();
     }
 }

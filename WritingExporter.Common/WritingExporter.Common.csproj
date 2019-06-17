@@ -55,6 +55,7 @@
     <Compile Include="ILogFactory.cs" />
     <Compile Include="ILogger.cs" />
     <Compile Include="IWdcClient.cs" />
+    <Compile Include="IWdcReader.cs" />
     <Compile Include="Log4NetLogFactory.cs" />
     <Compile Include="Log4NetLogger.cs" />
     <Compile Include="LogManager.cs" />
