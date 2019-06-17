@@ -64,7 +64,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Data\expected_set_13_06_2019\WdcReaderInteractiveChapter_Content.txt" />
+    <EmbeddedResource Include="Data\expected_set_13_06_2019\WdcReaderInteractiveChapter1_Content.txt" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Data\sample_set_13_06_2019\Alice the Fat Cheerleader - homepage - access restricted but OK.html" />
