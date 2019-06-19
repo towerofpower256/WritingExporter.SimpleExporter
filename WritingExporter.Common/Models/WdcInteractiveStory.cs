@@ -16,5 +16,7 @@ namespace WritingExporter.Common.Models
         public string Description { get; set; }
         public WdcAuthor Author { get; set; }
         public DateTime LastUpdated { get; set; } // When the last scrape update was run against Writing.com
+
+        public List<WdcInteractiveChapter> Chapters = new List<WdcInteractiveChapter>();
     }
 }
