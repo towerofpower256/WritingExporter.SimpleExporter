@@ -23,7 +23,7 @@ namespace WritingExporter.Common.Test
         }
 
         [TestMethod]
-        public void SimpleSaveAndLoad()
+        public void XmlSimpleSaveAndLoad()
         {
             var fname = $"{_testStory.ID}-SimpleSaveAndLoad.xml";
 

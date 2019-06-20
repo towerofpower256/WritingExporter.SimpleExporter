@@ -33,13 +33,11 @@ namespace WritingExporter.Common
         private CookieContainer httpCookies;
         private Dictionary<string, string> cookieDict = new Dictionary<string, string>();
         private WContentStoreSettings settings;
-        private CancellationTokenSource cTokenSource;
         
 
         public WdcClient(WContentStoreSettings settings)
         {
             this.settings = settings;
-            cTokenSource = new CancellationTokenSource();
             httpCookies = new CookieContainer();
             httpClientHandler = new HttpClientHandler();
             httpClientHandler.CookieContainer = httpCookies;
@@ -49,7 +47,6 @@ namespace WritingExporter.Common
         public void Reset()
         {
             log.Debug("Resetting");
-            Cancel();
             ClearCookies();
         }
 
@@ -62,13 +59,7 @@ namespace WritingExporter.Common
             httpClientHandler.CookieContainer = newCookieContainer;
         }
 
-        public void Cancel()
-        {
-            log.Debug("Cancelling any activities");
-            cTokenSource.Cancel();
-        }
-
-        public async Task LoginAsync()
+        public async Task LoginAsync(CancellationToken ct)
         {
             var username = settings.WritingUsername;
             var password = settings.WritingPassword;
@@ -79,10 +70,10 @@ namespace WritingExporter.Common
             if (string.IsNullOrEmpty(password))
                 throw new ArgumentNullException("username", "The Writing.com password cannot be empty");
 
-            await LoginAsync(username, password);
+            await LoginAsync(username, password, ct);
         }
 
-        public async Task LoginAsync(string username, string password)
+        public async Task LoginAsync(string username, string password, CancellationToken ct)
         {
             log.Debug("Logging into writing.com");
 
@@ -97,7 +88,7 @@ namespace WritingExporter.Common
 
             // Send the post request
             Uri loginUrl = GetPathToLogin();
-            HttpResponseMessage response = await httpClient.PostAsync(loginUrl, formEncContent, cTokenSource.Token);
+            HttpResponseMessage response = await httpClient.PostAsync(loginUrl, formEncContent, ct);
             response.EnsureSuccessStatusCode();
             // Don't need to handle cookies here, the httpClient has been given its own cookie store.
 
@@ -108,49 +99,49 @@ namespace WritingExporter.Common
 
         }
 
-        public async Task<WdcResponse> GetInteractiveHomepage(string interactiveID)
+        public async Task<WdcResponse> GetInteractiveHomepage(string interactiveID, CancellationToken ct)
         {
             Uri interactiveUri = GetPathToInteractive(interactiveID);
             log.DebugFormat("Getting interactive story: {0}", interactiveUri);
             var r = new WdcResponse();
             r.Address = interactiveUri.ToString();
-            r.WebResponse = await GetWdcPage(interactiveUri);
+            r.WebResponse = await GetWdcPage(interactiveUri, ct);
             return r;
         }
 
-        public async Task<WdcResponse> GetInteractiveChapter(string interactiveID, string chapterID)
+        public async Task<WdcResponse> GetInteractiveChapter(string interactiveID, string chapterID, CancellationToken ct)
         {
             Uri chapterUri = GetPathToInteractiveChapter(interactiveID, chapterID);
             log.DebugFormat("Getting interactive story chapter: {0}", chapterUri);
             var r = new WdcResponse();
             r.Address = chapterUri.ToString();
-            r.WebResponse = await GetWdcPage(chapterUri);
+            r.WebResponse = await GetWdcPage(chapterUri, ct);
             return r;
         }
 
-        public async Task<WdcResponse> GetInteractiveOutline(string interactiveID)
+        public async Task<WdcResponse> GetInteractiveOutline(string interactiveID, CancellationToken ct)
         {
             Uri outlineUri = GetPathToInteractiveOutline(interactiveID);
             log.DebugFormat("Getting interactive story outline: {0}", outlineUri);
             var r = new WdcResponse();
             r.Address = outlineUri.ToString();
-            r.WebResponse = await GetWdcPage(outlineUri);
+            r.WebResponse = await GetWdcPage(outlineUri, ct);
             return r;
         }
 
-        public async Task<WdcResponse> GetInteractiveRecentAdditions(string interactiveID)
+        public async Task<WdcResponse> GetInteractiveRecentAdditions(string interactiveID, CancellationToken ct)
         {
             Uri recentAdditionsUri = GetPathToInteractiveRecentAdditions(interactiveID);
             log.DebugFormat("Getting interactive story recent additions: {0}", recentAdditionsUri);
             var r = new WdcResponse();
             r.Address = recentAdditionsUri.ToString();
-            r.WebResponse = await GetWdcPage(recentAdditionsUri);
+            r.WebResponse = await GetWdcPage(recentAdditionsUri, ct);
             return r;
         }
 
-        public async Task<string> GetWdcPage(Uri uri)
+        public async Task<string> GetWdcPage(Uri uri, CancellationToken ct)
         {
-            string html = await HttpGetAsyncAsString(uri);
+            string html = await HttpGetAsyncAsString(uri, ct);
 
             if (IsInteractivesUnavailablePage(html))
                 throw new InteractivesTemporarilyUnavailableException();
@@ -160,10 +151,10 @@ namespace WritingExporter.Common
             {
                 // We need to log in, and get the chapter again
                 log.Debug("Login required while trying to get page");
-                await LoginAsync();
+                await LoginAsync(ct);
 
                 // Get it again
-                html = await HttpGetAsyncAsString(uri);
+                html = await HttpGetAsyncAsString(uri, ct);
 
                 // Check if it's a login again. If it is, login failed
                 if (IsLoginPage(html))
@@ -207,19 +198,17 @@ namespace WritingExporter.Common
             return new Uri(GetPathToInteractive(storyId), $"/map/{chapterId}");
         }
 
-        private async Task<HttpResponseMessage> HttpGetAsync(Uri urlToGet)
+        private async Task<HttpResponseMessage> HttpGetAsync(Uri urlToGet, CancellationToken ct)
         {
-            HttpResponseMessage response = await httpClient.GetAsync(urlToGet, cTokenSource.Token);
+            HttpResponseMessage response = await httpClient.GetAsync(urlToGet, ct);
             response.EnsureSuccessStatusCode(); // Fail if result is not 200 OK
-
-            //UpdateCookies(response);
 
             return response;
         }
 
-        private async Task<string> HttpGetAsyncAsString(Uri urlToGet)
+        private async Task<string> HttpGetAsyncAsString(Uri urlToGet, CancellationToken ct)
         {
-            HttpResponseMessage response = await HttpGetAsync(urlToGet);
+            HttpResponseMessage response = await HttpGetAsync(urlToGet, ct);
             return await response.Content.ReadAsStringAsync();
         }
 

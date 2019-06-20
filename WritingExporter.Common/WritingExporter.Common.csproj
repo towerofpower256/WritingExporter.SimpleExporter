@@ -65,13 +65,16 @@
     <Compile Include="Models\WdcInteractiveChapter.cs" />
     <Compile Include="Models\WdcInteractiveChapterChoice.cs" />
     <Compile Include="Models\WdcInteractiveStory.cs" />
+    <Compile Include="ObjectExtension.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Storage\IStoryFileStore.cs" />
     <Compile Include="Storage\XmlStoryFileStore.cs" />
     <Compile Include="TinyIoC.cs" />
     <Compile Include="WdcClient.cs" />
     <Compile Include="WdcReader.cs" />
-    <Compile Include="WdcStoryExporterHtmlCollection.cs" />
+    <Compile Include="Export\WdcStoryExporterHtmlCollection.cs" />
+    <Compile Include="WdcStoryContainer.cs" />
+    <Compile Include="WdcStorySyncWorker.cs" />
     <Compile Include="WdcUtil.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -79,15 +82,15 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
-    <Content Include="HtmlCollectionTemplates\Chapter.html" />
-    <Content Include="HtmlCollectionTemplates\ChapterChoiceEnd.html" />
-    <EmbeddedResource Include="HtmlCollectionTemplates\ChapterChoiceItemInvalid.html" />
-    <EmbeddedResource Include="HtmlCollectionTemplates\ChapterChoiceList.html" />
-    <EmbeddedResource Include="HtmlCollectionTemplates\ChapterChoiceItemValid.html" />
-    <Content Include="HtmlCollectionTemplates\StoryHomepage.html" />
-    <Content Include="HtmlCollectionTemplates\StoryOutline.html" />
-    <Content Include="HtmlCollectionTemplates\StoryOutlineItem.html" />
-    <Content Include="HtmlCollectionTemplates\style.css" />
+    <Content Include="Export\HtmlCollectionTemplates\Chapter.html" />
+    <Content Include="Export\HtmlCollectionTemplates\ChapterChoiceEnd.html" />
+    <EmbeddedResource Include="Export\HtmlCollectionTemplates\ChapterChoiceItemInvalid.html" />
+    <EmbeddedResource Include="Export\HtmlCollectionTemplates\ChapterChoiceList.html" />
+    <EmbeddedResource Include="Export\HtmlCollectionTemplates\ChapterChoiceItemValid.html" />
+    <Content Include="Export\HtmlCollectionTemplates\StoryHomepage.html" />
+    <Content Include="Export\HtmlCollectionTemplates\StoryOutline.html" />
+    <Content Include="Export\HtmlCollectionTemplates\StoryOutlineItem.html" />
+    <Content Include="Export\HtmlCollectionTemplates\style.css" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

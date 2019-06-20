@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using WritingExporter.Common.Models;
 using WritingExporter.Common.Exceptions;
 using System.Web;
+using System.Threading;
 
 namespace WritingExporter.Common
 {
@@ -16,21 +17,19 @@ namespace WritingExporter.Common
     {
         private static ILogger log = LogManager.GetLogger(typeof(WdcReader));
 
-        private IWdcClient wdcClient;
-
-        public WdcReader(IWdcClient client)
+        public WdcReader()
         {
-            wdcClient = client;
+            
         }
 
-        public async Task<WdcInteractiveStory> GetInteractiveStory(string interactiveID)
+        public async Task<WdcInteractiveStory> GetInteractiveStory(string interactiveID, IWdcClient wdcClient, CancellationToken ct)
         {
-            var wdcPayload = await wdcClient.GetInteractiveHomepage(interactiveID);
+            var wdcPayload = await wdcClient.GetInteractiveHomepage(interactiveID, ct);
 
-            return await GetInteractiveStory(interactiveID, wdcPayload);
+            return GetInteractiveStory(interactiveID, wdcPayload);
         }
 
-        public async Task<WdcInteractiveStory> GetInteractiveStory(string interactiveID, WdcResponse wdcPayload)
+        public WdcInteractiveStory GetInteractiveStory(string interactiveID, WdcResponse wdcPayload)
         {
             log.DebugFormat("Getting interactive story: {0}", interactiveID);
 
@@ -88,14 +87,14 @@ namespace WritingExporter.Common
             throw new NotImplementedException();
         }
 
-        public async Task<WdcInteractiveChapter> GetInteractiveChaper(string interactiveID, string chapterPath)
+        public async Task<WdcInteractiveChapter> GetInteractiveChaper(string interactiveID, string chapterPath, IWdcClient wdcClient, CancellationToken ct)
         {
-            WdcResponse payload = await wdcClient.GetInteractiveChapter(interactiveID, chapterPath);
+            WdcResponse payload = await wdcClient.GetInteractiveChapter(interactiveID, chapterPath, ct);
 
-            return await GetInteractiveChaper(interactiveID, chapterPath, payload);
+            return GetInteractiveChaper(interactiveID, chapterPath, payload);
         }
 
-        public async Task<WdcInteractiveChapter> GetInteractiveChaper(string interactiveID, string chapterPath, WdcResponse payload)
+        public WdcInteractiveChapter GetInteractiveChaper(string interactiveID, string chapterPath, WdcResponse payload)
         {
 
             if (!WdcUtil.IsValidChapterPath(chapterPath))
@@ -268,16 +267,21 @@ namespace WritingExporter.Common
         }
 
         // TODO Get chapter list from story outline
-        public async Task<IEnumerable<Uri>> GetInteractiveChapterList(string interactiveID)
+        public async Task<IEnumerable<Uri>> GetInteractiveChapterList(string interactiveID, IWdcClient wdcClient, CancellationToken ct)
         {
-            var wdcPayload = await wdcClient.GetInteractiveOutline(interactiveID);
+            var wdcPayload = await wdcClient.GetInteractiveOutline(interactiveID, ct);
+            ct.ThrowIfCancellationRequested();
+            return GetInteractiveChapterList(interactiveID, wdcClient.GetPathToRoot(), wdcPayload);
+        }
 
+        public IEnumerable<Uri> GetInteractiveChapterList(string interactiveID, Uri pathToRoot, WdcResponse wdcPayload)
+        {
             var chapters = new List<Uri>();
 
             // Find the links to the interactive's pages
             // Create the regex that will find chapter links
             // E.g. https:\/\/www\.writing\.com\/main\/interact\/item_id\/1824771-short-stories-by-the-people\/map\/(\d)+
-            string chapterLinkRegexPattern = wdcClient.GetPathToRoot() + string.Format("main/interact/item_id/{0}/map/{1}", interactiveID, @"(\d)+");
+            string chapterLinkRegexPattern = pathToRoot.ToString() + string.Format("main/interact/item_id/{0}/map/{1}", interactiveID, @"(\d)+");
             chapterLinkRegexPattern = WdcUtil.RegexSafeUrl(chapterLinkRegexPattern);
             Regex chapterLinkRegex = new Regex(chapterLinkRegexPattern, RegexOptions.IgnoreCase);
             MatchCollection matches = chapterLinkRegex.Matches(wdcPayload.WebResponse);

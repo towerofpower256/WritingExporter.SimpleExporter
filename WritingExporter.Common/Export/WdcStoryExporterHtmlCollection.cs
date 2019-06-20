@@ -6,15 +6,19 @@ using System.Threading.Tasks;
 using WritingExporter.Common.Models;
 using System.IO;
 
-namespace WritingExporter.Common
+namespace WritingExporter.Common.Export
 {
     /// <summary>
     /// <para>Use this to export stories to a collection of HTML files, 1 file per page.</para>
-    /// <para>Note that this will cause issues if the chapter is over 200 branches deep. It will breach the 255 character filename limit.</para>
+    /// <para>Note that this will cause issues if the chapter path is over ~200 levels deep. It will breach the 255 character filename limit.</para>
     /// </summary>
+    // NOTE: The map depth limit won't be circumvented by sticking them in an archive file, they have about the same file size restriction.
+    // Possible solution: The map depth limit may be circumvented by naming the files with a GUID. It will
+    //     make the file names less human readable, but it would work. I'll leave it for the future.
+    //     I'm hoping that writing.com has a similar limitation, and this issue won't ever be encountered.
     public class WdcStoryExporterHtmlCollection
     {
-        private const string HTML_TEMPLATE_ROOT = "WritingExporter.Common.HtmlCollectionTemplates.";
+        private const string HTML_TEMPLATE_ROOT = "WritingExporter.Common.Export.HtmlCollectionTemplates."; // Update this if the templates ever move.
         private const string STORY_HOMEPAGE_FILENAME = "index.html";
         private const string STORY_OUTLINE_FILENAME = "outline.html";
         private const string STORY_CHAPTER_FILENAME = "chapter-{0}.html";
