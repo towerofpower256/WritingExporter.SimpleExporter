@@ -108,6 +108,7 @@
             // 
             this.dgvStories.AllowUserToAddRows = false;
             this.dgvStories.AllowUserToDeleteRows = false;
+            this.dgvStories.BackgroundColor = System.Drawing.SystemColors.Window;
             this.dgvStories.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvStories.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvStories.Location = new System.Drawing.Point(3, 43);
@@ -129,6 +130,7 @@
             // 
             // tbConsoleOutput
             // 
+            this.tbConsoleOutput.BackColor = System.Drawing.SystemColors.Window;
             this.tbConsoleOutput.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tbConsoleOutput.Location = new System.Drawing.Point(3, 16);
             this.tbConsoleOutput.Multiline = true;
@@ -151,6 +153,7 @@
             // 
             // tbStoryInfo
             // 
+            this.tbStoryInfo.BackColor = System.Drawing.SystemColors.Window;
             this.tbStoryInfo.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tbStoryInfo.Location = new System.Drawing.Point(3, 16);
             this.tbStoryInfo.Multiline = true;
