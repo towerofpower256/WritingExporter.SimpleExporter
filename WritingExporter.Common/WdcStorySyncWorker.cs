@@ -117,8 +117,6 @@ namespace WritingExporter.Common
             var lastLoop = DateTime.Now - new TimeSpan(0, 0, 0, GetSettings().WorkerLoopPauseMs);
             while (true)
             {
-                
-
                 // Should we pause?
                 var msSinceLastLoop = (DateTime.Now - lastLoop).TotalMilliseconds;
                 if (msSinceLastLoop < GetSettings().WorkerLoopPauseMs)
