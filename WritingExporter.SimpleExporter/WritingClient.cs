@@ -280,16 +280,14 @@ namespace WritingExporter.SimpleExporter
             Regex chapterSourceChoiceRegex = new Regex(@"(?<=This choice: <b>).*?(?=<\/b>)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
             Match chapterSourceChoiceMatch = chapterSourceChoiceRegex.Match(chapterHtml);
 
-            // DEBUG, always throw error
-            throw new WritingClientHtmlParseException($"Couldn't find the interactive chapter's source choice and this isn't the first chapter, for chapter '{chapterUrl.ToString()}'", chapterHtml);
-
             if (!chapterSourceChoiceMatch.Success && chapterUrlParm != "1") // If we can't find it, and it's not the first chapter
                 throw new WritingClientHtmlParseException($"Couldn't find the interactive chapter's source choice and this isn't the first chapter, for chapter '{chapterUrl.ToString()}'", chapterHtml);
             string chapterSourceChoice = HttpUtility.HtmlDecode(chapterSourceChoiceMatch.Value);
 
             // Search for the chapter content, the actual writing
             // <div class="KonaBody">stuff goes here</div>
-            Regex chapterContentRegex = new Regex("(?<=<div class=\"KonaBody\">).+?(?=<\\/div>)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            //Regex chapterContentRegex = new Regex("(?<=<div class=\"KonaBody\">).+?(?=<\\/div>)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            Regex chapterContentRegex = new Regex("(?<=<div class=\"\">).+?(?=<\\/div>)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
             Match chapterContentMatch = chapterContentRegex.Match(chapterHtml);
             if (!chapterContentMatch.Success)
                 throw new WritingClientHtmlParseException($"Couldn't find the content for the interactive chapter '{chapterUrl.ToString()}'", chapterHtml);
