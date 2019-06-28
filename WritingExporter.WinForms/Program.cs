@@ -21,9 +21,15 @@ namespace WritingExporter.WinForms
             lf.AddConsoleAppender().AddFileAppender().EndConfig();
             LogManager.SetLogFactory(lf);
 
-            // Start GUI
+            // Setup GUI
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+
+            // Compose application
+            var container = SimpleInjector.Container();
+            container.Register
+
+            // Run
             Application.Run(new MainForm());
         }
     }

@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using WritingExporter.Common.Models;
+using WritingExporter.Common.Storage;
 
 namespace WritingExporter.Common
 {
@@ -13,14 +16,83 @@ namespace WritingExporter.Common
     /// </summary>
     public class WdcStoryContainer
     {
+        private const int SAVE_CHECK_INTERVAL_MS = 2000; // How often to check if a story needs saving.
+        private const string SAVE_DIR = "Stories"; // Relative directory to save stories to.
+
+        private static readonly ILogger _log = LogManager.GetLogger(typeof(WdcStoryContainer));
+
         public event EventHandler<WdcStoryContainerEventArgs> OnUpdate;
 
-        ICollection<WdcInteractiveStory> _storyCollection;
-        object _lock;
+        // Services
+        IStoryFileStore _fileStore;
 
-        public WdcStoryContainer()
+        //Private members
+        ICollection<WdcStoryContainerWrapper> _storyCollection;
+        object _lock;
+        Task _saveCheckWorker;
+
+        public WdcStoryContainer(IStoryFileStore fileStore)
         {
-            _storyCollection = new Collection<WdcInteractiveStory>();
+            _fileStore = fileStore;
+            _storyCollection = new Collection<WdcStoryContainerWrapper>();
+
+            StartSaveWorker();
+        }
+
+        private void StartSaveWorker()
+        {
+            if (_saveCheckWorker != null)
+                throw new Exception("Cannot start the save check worker after it has already been started");
+        }
+
+        // Brain function that the save check worker will use
+        private void SaveCheckWorkerBrain()
+        {
+            _log.Debug("Starting save check worker");
+            while (true)
+            {
+                _log.Debug("Checking if any stories need saving");
+
+                foreach (var sw in _storyCollection)
+                {
+                    if (sw.NeedsSave)
+                    {
+                        SaveStory(sw.Story);
+                    }
+                }
+
+                // Pausing
+                Thread.Sleep(SAVE_CHECK_INTERVAL_MS);
+            }
+        }
+
+        private void SaveStory(WdcInteractiveStory story)
+        {
+            _fileStore.SaveStory(story);
+        }
+
+        private void LoadStory(string filename)
+        {
+            _log.Debug($"Loading story: {filename}");
+            this.AddStory(_fileStore.LoadStory(filename));
+        }
+
+        private void LoadAllStories()
+        {
+            _log.Debug("Loading all stories");
+            foreach (var story in _fileStore.LoadAllStories())
+            {
+                AddStory(story);
+            }
+        }
+
+        private WdcStoryContainerWrapper GetNewWrapper(WdcInteractiveStory story)
+        {
+            return new WdcStoryContainerWrapper()
+            {
+                Story = story,
+                NeedsSave = true
+            };
         }
 
         private void DoEvent(string storyID, WdcStoryContainerEventType eventType)
@@ -35,15 +107,13 @@ namespace WritingExporter.Common
 
             lock (_lock)
             {
-                //foreach (var story in _storyCollection)
-                //{
-                //    newList.Add(story.DeepClone());
-                //}
-
-                return _storyCollection.DeepClone();
+                foreach (var sw in _storyCollection)
+                {
+                    newList.Add(sw.Story.DeepClone());
+                }
             }
 
-            //return newList;
+            return newList;
         }
 
         public bool HasStory(string storyID)
@@ -69,20 +139,25 @@ namespace WritingExporter.Common
 
         private WdcInteractiveStory _GetStory(string storyID)
         {
-            return _storyCollection.Where(s => s.ID == storyID).SingleOrDefault();
+            return _storyCollection.Where(s => s.Story.ID == storyID).SingleOrDefault().Story;
         }
 
         public void AddStory(WdcInteractiveStory newStory)
         {
             lock (_lock)
             {
-                if (_HasStory(newStory.ID))
-                    throw new Exception($"A story with the ID of '{newStory.ID}' already exists.");
-
-                _storyCollection.Add(newStory);
+                _AddStory(newStory);
             }
 
             DoEvent(newStory.ID, WdcStoryContainerEventType.Add);
+        }
+
+        private void _AddStory(WdcInteractiveStory newStory)
+        {
+            if (_HasStory(newStory.ID))
+                throw new Exception($"A story with the ID of '{newStory.ID}' already exists.");
+
+            _storyCollection.Add(GetNewWrapper(newStory));
         }
 
         public void RemoveStory(string storyID)
@@ -97,7 +172,7 @@ namespace WritingExporter.Common
 
         private void _RemoveStory(string storyID)
         {
-            var existingStory = _GetStory(storyID);
+            var existingStory = _storyCollection.Where(s => s.Story.ID == storyID).SingleOrDefault();
             if (existingStory == null)
                 throw new Exception($"A story with the ID of '{storyID}' does not exist.");
 
@@ -115,7 +190,7 @@ namespace WritingExporter.Common
                 // Copy it over, including all the chapters
                 // Remove the old story, add in the replacement
                 _RemoveStory(newStory.ID);
-                _storyCollection.Add(newStory);
+                _AddStory(newStory);
             }
 
             DoEvent(newStory.ID, WdcStoryContainerEventType.Update);
@@ -135,6 +210,12 @@ namespace WritingExporter.Common
         Add,
         Remove,
         Update
+    }
+
+    public class WdcStoryContainerWrapper
+    {
+        public WdcInteractiveStory Story { get; set; }
+        public bool NeedsSave { get; set; } = false;
     }
 
 }
