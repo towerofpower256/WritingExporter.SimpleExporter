@@ -49,9 +49,12 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConfigurationTests.cs" />
     <Compile Include="DummyWdcClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StoryFileStoreTests.cs" />
+    <Compile Include="TestConfigSections\TestAppConfig.cs" />
+    <Compile Include="TestConfigSections\TestUiConfigSection.cs" />
     <Compile Include="TestUtil.cs" />
     <Compile Include="WdcReaderTests.cs" />
   </ItemGroup>

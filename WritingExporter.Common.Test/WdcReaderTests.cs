@@ -20,7 +20,7 @@ namespace WritingExporter.Common.Test
         {
             TestUtil.SetupLogging();
             _client = new DummyWdcClient("Data");
-            _reader = new WdcReader(_client);
+            _reader = new WdcReader();
         }
 
         [TestMethod]
@@ -93,7 +93,7 @@ namespace WritingExporter.Common.Test
             payload.WebResponse = TestUtil.GetDataFile("sample_set_13_06_2019.Looking for adventure - chapter 1 - logged in.html");
             payload.Address = "https://www.writing.com/main/interact/item_id/209084-Looking-for-adventure/map/1";
 
-            WdcInteractiveChapter testChapter = await _reader.GetInteractiveChaper("TEST", expectedChapter.Path, payload);
+            WdcInteractiveChapter testChapter = _reader.GetInteractiveChaper("TEST", expectedChapter.Path, payload);
 
             
 
@@ -137,7 +137,7 @@ namespace WritingExporter.Common.Test
             payload.WebResponse = TestUtil.GetDataFile("sample_set_13_06_2019.Looking for adventure - chapter 1 - logged out.html");
             payload.Address = "https://www.writing.com/main/interact/item_id/209084-Looking-for-adventure/map/1";
 
-            WdcInteractiveChapter testChapter = await _reader.GetInteractiveChaper("TEST", expectedChapter.Path, payload);
+            WdcInteractiveChapter testChapter = _reader.GetInteractiveChaper("TEST", expectedChapter.Path, payload);
 
             // Compare
             CompareInteractiveChapters(expectedChapter, testChapter);

@@ -49,6 +49,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AppContext.cs" />
     <Compile Include="Forms\AddStoryForm.cs">
       <SubType>Form</SubType>
     </Compile>

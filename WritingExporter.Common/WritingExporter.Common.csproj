@@ -52,6 +52,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BaseWdcClient.cs" />
+    <Compile Include="Configuration\ConfigProvider.cs" />
+    <Compile Include="Configuration\IConfigProvider.cs" />
     <Compile Include="Exceptions\WritingClientHtmlParseException.cs" />
     <Compile Include="Exceptions\WritingLoginFailed.cs" />
     <Compile Include="Exceptions\InteractivesTemporarilyUnavailableException.cs" />
@@ -83,7 +85,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Dependency\" />
+    <Folder Include="Composition\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Export\HtmlCollectionTemplates\Chapter.html" />

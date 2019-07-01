@@ -10,24 +10,14 @@ namespace WritingExporter.WinForms
 {
     static class Program
     {
+        private static SimpleInjector.Container _diContainer;
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
         static void Main()
         {
-            // Setup logging
-            var lf = new Log4NetLogFactory();
-            lf.AddConsoleAppender().AddFileAppender().EndConfig();
-            LogManager.SetLogFactory(lf);
-
-            // Setup GUI
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-
-            // Compose application
-            var container = SimpleInjector.Container();
-            container.Register
 
             // Run
             Application.Run(new MainForm());
