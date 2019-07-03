@@ -8,21 +8,16 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using WritingExporter.Common.Configuration;
 using WritingExporter.Common.Exceptions;
 using WritingExporter.Common.Models;
 
 namespace WritingExporter.Common
 {
-    public class WContentStoreSettings
-    {
-        public string WritingUsername { get; set; }
-        public string WritingPassword { get; set; }
-    }
-
     // Class to get HTML from Writing.com
     public class WdcClient : BaseWdcClient, IWdcClient
     {
-        private static ILogger log = LogManager.GetLogger(typeof(WdcClient));
+        private static ILogger _log = LogManager.GetLogger(typeof(WdcClient));
 
         private const string URL_ROOT = "https://www.writing.com/";
         private const string HTTP_SET_COOKIE_HEADER = "Set-Cookie";
@@ -32,12 +27,19 @@ namespace WritingExporter.Common
         private HttpClient httpClient;
         private CookieContainer httpCookies;
         private Dictionary<string, string> cookieDict = new Dictionary<string, string>();
-        private WContentStoreSettings settings;
+        private WdcClientConfiguration settings;
+
+        private IConfigProvider _configProvider;
         
 
-        public WdcClient(WContentStoreSettings settings)
+        public WdcClient(IConfigProvider configProvider)
         {
-            this.settings = settings;
+            _log.Debug("Starting");
+
+            _configProvider = configProvider;
+            _configProvider.OnSectionChanged += new EventHandler<ConfigSectionChangedEventArgs>(OnSettingsUpdate);
+
+            UpdateSettings();
             httpCookies = new CookieContainer();
             httpClientHandler = new HttpClientHandler();
             httpClientHandler.CookieContainer = httpCookies;
@@ -46,13 +48,28 @@ namespace WritingExporter.Common
 
         public void Reset()
         {
-            log.Debug("Resetting");
+            _log.Debug("Resetting");
             ClearCookies();
+        }
+
+        private void OnSettingsUpdate(object sender, ConfigSectionChangedEventArgs args)
+        {
+            if (args.IsSectionType(typeof(WdcClientConfiguration)))
+            {
+                UpdateSettings();
+            }
+        }
+
+        private void UpdateSettings()
+        {
+            _log.Debug("Updating settings");
+            // Grab a new settings object from the config provider
+            settings = _configProvider.GetSection<WdcClientConfiguration>();
         }
 
         private void ClearCookies()
         {
-            log.Debug("Clearing cookies");
+            _log.Debug("Clearing cookies");
             var newCookieContainer = new CookieContainer();
 
             httpCookies = newCookieContainer;
@@ -75,7 +92,7 @@ namespace WritingExporter.Common
 
         public async Task LoginAsync(string username, string password, CancellationToken ct)
         {
-            log.Debug("Logging into writing.com");
+            _log.Debug("Logging into writing.com");
 
             // Endcode login info, ready to be included in the POST data.
             Dictionary<string, string> contentDict = new Dictionary<string, string>();
@@ -102,7 +119,7 @@ namespace WritingExporter.Common
         public async Task<WdcResponse> GetInteractiveHomepage(string interactiveID, CancellationToken ct)
         {
             Uri interactiveUri = GetPathToInteractive(interactiveID);
-            log.DebugFormat("Getting interactive story: {0}", interactiveUri);
+            _log.DebugFormat("Getting interactive story: {0}", interactiveUri);
             var r = new WdcResponse();
             r.Address = interactiveUri.ToString();
             r.WebResponse = await GetWdcPage(interactiveUri, ct);
@@ -112,7 +129,7 @@ namespace WritingExporter.Common
         public async Task<WdcResponse> GetInteractiveChapter(string interactiveID, string chapterID, CancellationToken ct)
         {
             Uri chapterUri = GetPathToInteractiveChapter(interactiveID, chapterID);
-            log.DebugFormat("Getting interactive story chapter: {0}", chapterUri);
+            _log.DebugFormat("Getting interactive story chapter: {0}", chapterUri);
             var r = new WdcResponse();
             r.Address = chapterUri.ToString();
             r.WebResponse = await GetWdcPage(chapterUri, ct);
@@ -122,7 +139,7 @@ namespace WritingExporter.Common
         public async Task<WdcResponse> GetInteractiveOutline(string interactiveID, CancellationToken ct)
         {
             Uri outlineUri = GetPathToInteractiveOutline(interactiveID);
-            log.DebugFormat("Getting interactive story outline: {0}", outlineUri);
+            _log.DebugFormat("Getting interactive story outline: {0}", outlineUri);
             var r = new WdcResponse();
             r.Address = outlineUri.ToString();
             r.WebResponse = await GetWdcPage(outlineUri, ct);
@@ -132,7 +149,7 @@ namespace WritingExporter.Common
         public async Task<WdcResponse> GetInteractiveRecentAdditions(string interactiveID, CancellationToken ct)
         {
             Uri recentAdditionsUri = GetPathToInteractiveRecentAdditions(interactiveID);
-            log.DebugFormat("Getting interactive story recent additions: {0}", recentAdditionsUri);
+            _log.DebugFormat("Getting interactive story recent additions: {0}", recentAdditionsUri);
             var r = new WdcResponse();
             r.Address = recentAdditionsUri.ToString();
             r.WebResponse = await GetWdcPage(recentAdditionsUri, ct);
@@ -150,7 +167,7 @@ namespace WritingExporter.Common
             if (IsLoginPage(html))
             {
                 // We need to log in, and get the chapter again
-                log.Debug("Login required while trying to get page");
+                _log.Debug("Login required while trying to get page");
                 await LoginAsync(ct);
 
                 // Get it again

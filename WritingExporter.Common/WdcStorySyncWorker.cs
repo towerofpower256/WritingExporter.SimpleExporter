@@ -24,7 +24,7 @@ namespace WritingExporter.Common
         object _settingsLock;
         bool _syncEnabled;
 
-        public event EventHandler OnWorkerStatusChange;
+        public event EventHandler<WdcStorySyncWorkerStatusEventArgs> OnWorkerStatusChange;
 
         public WdcStorySyncWorker(WdcStoryContainer storyContainer, IWdcReader wdcReader, IWdcClient wdcClient, WdcStorySyncWorkerSettings settings)
         {
@@ -67,6 +67,11 @@ namespace WritingExporter.Common
             _ctSource = new CancellationTokenSource();
         }
 
+        private void DoWorkerStatusChange(WdcStorySyncWorkerStatusEventArgs args)
+        {
+            OnWorkerStatusChange?.Invoke(this, args);
+        }
+
         public WdcStorySyncWorkerStatus GetCurrentStatus()
         {
             lock (_statusLock)
@@ -83,21 +88,46 @@ namespace WritingExporter.Common
             status.ProgressValue = 0;
             status.ProgressMax = 0;
 
-            SetCurrentStatus(status);
+            _SetCurrentStatus(status);
         }
 
-        private void SetCurrentStatus(WdcStorySyncWorkerStatus status)
-        {
-            lock (_statusLock)
-                _status = status;
-        }
+        
 
         private void SetCurrentStatusProgress(int progressValue, int progressMax)
         {
             var status = GetCurrentStatus();
             status.ProgressValue = progressValue;
             status.ProgressMax = progressMax;
-            SetCurrentStatus(status);
+            _SetCurrentStatus(status);
+        }
+
+        private void _SetCurrentStatus(WdcStorySyncWorkerStatus newStatus)
+        {
+            var currentStatus = this.GetCurrentStatus();
+
+            lock (_statusLock)
+                _status = newStatus;
+
+            //Compare, and trigger event if nessessary
+            var statusChangeArgs = new WdcStorySyncWorkerStatusEventArgs();
+
+            if (newStatus.State != currentStatus.State) statusChangeArgs.StateChanged = true;
+            if (newStatus.ProgressMax != currentStatus.ProgressMax || newStatus.ProgressValue != currentStatus.ProgressValue) statusChangeArgs.ProgressChanged = true;
+            if (newStatus.Message != currentStatus.Message) statusChangeArgs.MessageChanged = true;
+            if (newStatus.CurrentStoryId != currentStatus.CurrentStoryId) statusChangeArgs.CurrentStoryChanged = true;
+            if (newStatus.CurrentChapterId != currentStatus.CurrentChapterId) statusChangeArgs.CurrentChapterChanged = true;
+
+            if (statusChangeArgs.StateChanged 
+                || statusChangeArgs.ProgressChanged 
+                || statusChangeArgs.MessageChanged 
+                || statusChangeArgs.CurrentStoryChanged 
+                || statusChangeArgs.CurrentChapterChanged)
+            {
+                // Something has changed, send event
+                DoWorkerStatusChange(statusChangeArgs);
+            }
+
+            
         }
 
         public void StartWorker()
@@ -275,6 +305,15 @@ namespace WritingExporter.Common
         // Is sync enabled?
         // Default: yes
         public bool SyncEnabled { get; set; } = true;
+    }
+
+    public class WdcStorySyncWorkerStatusEventArgs
+    {
+        public bool StateChanged { get; set; }
+        public bool MessageChanged { get; set; }
+        public bool ProgressChanged { get; set; }
+        public bool CurrentStoryChanged { get; set; }
+        public bool CurrentChapterChanged { get; set; }
     }
 
     [Serializable]

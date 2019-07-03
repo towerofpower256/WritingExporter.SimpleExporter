@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace WritingExporter.Common.Test
 {
@@ -37,6 +38,31 @@ namespace WritingExporter.Common.Test
             Log4NetLogFactory lf = new Log4NetLogFactory();
             lf.AddConsoleAppender().SetLogLevel("debug").EndConfig();
             LogManager.SetLogFactory(lf);
+        }
+
+        public static bool SerializeAndCompare<T>(T objA, T objB)
+        {
+            string objASerialized = QuickXmlSerialize(objA);
+            string objBSerialized = QuickXmlSerialize(objB);
+
+            return string.Equals(objASerialized, objBSerialized);
+        }
+
+        public static string QuickXmlSerialize<T>(T obj)
+        {
+            var serializer = new XmlSerializer(typeof(T), "");
+
+            using (var stream = new MemoryStream())
+            {
+                serializer.Serialize(stream, obj);
+
+                stream.Position = 0;
+
+                using (var reader = new StreamReader(stream))
+                {
+                    return reader.ReadToEnd();
+                }
+            }
         }
     }
 }

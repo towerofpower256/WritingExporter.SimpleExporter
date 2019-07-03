@@ -10,10 +10,30 @@ using System.Xml.Serialization;
 
 namespace WritingExporter.Common.Configuration
 {
+    public class ConfigSectionChangedEventArgs : EventArgs
+    {
+        /// <summary>
+        /// Name of the section that was updated.
+        /// </summary>
+        public string SectionName { get; set; }
+
+        /// <summary>
+        /// Quick and type-safe method of checking if the updated section is of a type.
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public bool IsSectionType(Type type)
+        {
+            return string.Equals(type.Name, SectionName);
+        }
+    }
+
     public class ConfigProvider : IConfigProvider
     {
         const string SETTINGS_FILENAME = "config.xml";
         const string SECTION_ROOT_ELEMENT_NAME = "ConfigSections";
+
+        public event EventHandler<ConfigSectionChangedEventArgs> OnSectionChanged;
 
         private static ILogger _log = LogManager.GetLogger(typeof(ConfigProvider));
 
@@ -54,10 +74,15 @@ namespace WritingExporter.Common.Configuration
 
         public void SetSection<T>(T updatedSection)
         {
-            this.SetSection<T>(typeof(T).Name, updatedSection);
+            this._SetSection<T>(typeof(T).Name, updatedSection);
         }
 
         public void SetSection<T>(string sectionName, T updatedSection)
+        {
+            this._SetSection(sectionName, updatedSection);
+        }
+
+        private void _SetSection<T>(string sectionName, T updatedSection, bool silent = false)
         {
             if (string.IsNullOrEmpty(sectionName))
                 throw new ArgumentNullException("sectionName");
@@ -70,6 +95,7 @@ namespace WritingExporter.Common.Configuration
             lock (_lock)
             {
                 _configSections[sectionName] = ToXElement<T>(updatedSection);
+                if (!silent) DoSectionChangedEvent(sectionName);
             }
         }
 
@@ -101,6 +127,11 @@ namespace WritingExporter.Common.Configuration
                 // Update sections dictionary
                 _configSections = newPropDict;
             }
+
+            foreach (var key in _configSections.Keys)
+            {
+                DoSectionChangedEvent(key);
+            }
         }
 
         public void SaveSettings()
@@ -121,6 +152,16 @@ namespace WritingExporter.Common.Configuration
 
             // Save
             new XDocument(new XElement(SECTION_ROOT_ELEMENT_NAME, propsToSave)).Save(SETTINGS_FILENAME);
+        }
+
+        private void DoSectionChangedEvent(string sectionName)
+        {
+            _log.Debug($"Triggering SectionChanged event for: {sectionName}");
+
+            OnSectionChanged?.Invoke(this, new ConfigSectionChangedEventArgs()
+            {
+                SectionName = sectionName
+            });
         }
 
         private XElement ToXElement<T>(T obj)

@@ -1,7 +1,11 @@
-﻿namespace WritingExporter.Common.Configuration
+﻿using System;
+
+namespace WritingExporter.Common.Configuration
 {
     public interface IConfigProvider
     {
+        event EventHandler<ConfigSectionChangedEventArgs> OnSectionChanged;
+
         T GetSection<T>();
         T GetSection<T>(string sectionName);
         void LoadSettings();

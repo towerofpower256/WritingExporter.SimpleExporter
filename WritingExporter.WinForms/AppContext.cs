@@ -70,7 +70,7 @@ namespace WritingExporter.WinForms
             _container.Register<IWdcClient, WdcClient>(Lifestyle.Singleton);
             _container.Register<IWdcReader, WdcReader>(Lifestyle.Singleton);
             _container.Register<IStoryFileStore, XmlStoryFileStore>(Lifestyle.Singleton);
-            _container.Register<WdcStoryContainer>(Lifestyle.Singleton); // TODO make interface
+            _container.Register<IWdcStoryContainer>(Lifestyle.Singleton);
             _container.Register<WdcStorySyncWorker>(Lifestyle.Singleton); // TODO make interface
         }
 

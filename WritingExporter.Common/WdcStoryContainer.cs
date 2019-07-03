@@ -14,7 +14,7 @@ namespace WritingExporter.Common
     /// <summary>
     /// Thread-safe collection for holding interactive stories.
     /// </summary>
-    public class WdcStoryContainer
+    public class WdcStoryContainer : IWdcStoryContainer, IDisposable
     {
         private const int SAVE_CHECK_INTERVAL_MS = 2000; // How often to check if a story needs saving.
         private const string SAVE_DIR = "Stories"; // Relative directory to save stories to.
@@ -28,41 +28,81 @@ namespace WritingExporter.Common
 
         //Private members
         ICollection<WdcStoryContainerWrapper> _storyCollection;
-        object _lock;
+        object _lock = new object();
         Task _saveCheckWorker;
+        CancellationTokenSource _ctSource;
 
         public WdcStoryContainer(IStoryFileStore fileStore)
         {
+            _log.Debug("Starting");
+
             _fileStore = fileStore;
             _storyCollection = new Collection<WdcStoryContainerWrapper>();
 
             StartSaveWorker();
         }
 
+        public void Dispose()
+        {
+            StopSaveWorker();
+        }
+
         private void StartSaveWorker()
         {
             if (_saveCheckWorker != null)
                 throw new Exception("Cannot start the save check worker after it has already been started");
+
+            _ctSource = new CancellationTokenSource();
+            var newWorkerTask = new Task(() => SaveCheckWorkerBrain());
+            newWorkerTask.Start();
+            _saveCheckWorker = newWorkerTask;
+        }
+
+        private void StopSaveWorker()
+        {
+            if (_saveCheckWorker == null)
+            {
+                return; // Do nothing
+            }
+
+            _ctSource.Cancel();
         }
 
         // Brain function that the save check worker will use
         private void SaveCheckWorkerBrain()
         {
             _log.Debug("Starting save check worker");
+            var ct = _ctSource.Token;
             while (true)
             {
-                _log.Debug("Checking if any stories need saving");
-
-                foreach (var sw in _storyCollection)
+                try
                 {
-                    if (sw.NeedsSave)
-                    {
-                        SaveStory(sw.Story);
-                    }
-                }
+                    _log.Debug("Checking if any stories need saving");
 
-                // Pausing
-                Thread.Sleep(SAVE_CHECK_INTERVAL_MS);
+                    ct.ThrowIfCancellationRequested();
+
+                    foreach (var sw in _storyCollection)
+                    {
+                        ct.ThrowIfCancellationRequested();
+                        if (sw.NeedsSave)
+                        {
+                            SaveStory(sw.Story);
+                        }
+                    }
+
+                    // Pausing
+                    ct.ThrowIfCancellationRequested();
+                    Thread.Sleep(SAVE_CHECK_INTERVAL_MS);
+                }
+                catch (OperationCanceledException ex)
+                {
+                    _log.Debug("Stopping save check worker");
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    _log.Warn("Exception in save check worker!", ex);
+                }
             }
         }
 

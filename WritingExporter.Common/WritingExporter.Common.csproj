@@ -54,6 +54,7 @@
     <Compile Include="BaseWdcClient.cs" />
     <Compile Include="Configuration\ConfigProvider.cs" />
     <Compile Include="Configuration\IConfigProvider.cs" />
+    <Compile Include="Configuration\WdcClientConfiguration.cs" />
     <Compile Include="Exceptions\WritingClientHtmlParseException.cs" />
     <Compile Include="Exceptions\WritingLoginFailed.cs" />
     <Compile Include="Exceptions\InteractivesTemporarilyUnavailableException.cs" />
@@ -62,6 +63,7 @@
     <Compile Include="ILogger.cs" />
     <Compile Include="IWdcClient.cs" />
     <Compile Include="IWdcReader.cs" />
+    <Compile Include="IWdcStoryContainer.cs" />
     <Compile Include="Log4NetLogFactory.cs" />
     <Compile Include="Log4NetLogger.cs" />
     <Compile Include="LogManager.cs" />

@@ -19,7 +19,7 @@ namespace WritingExporter.Common
 
         public WdcReader()
         {
-            
+            log.Debug("Starting");
         }
 
         public async Task<WdcInteractiveStory> GetInteractiveStory(string interactiveID, IWdcClient wdcClient, CancellationToken ct)
