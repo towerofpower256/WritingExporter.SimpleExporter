@@ -28,6 +28,7 @@ namespace WritingExporter.Common
                 Message = loggingEvent.RenderedMessage,
                 Timestamp = loggingEvent.TimeStamp,
                 Exception = loggingEvent.ExceptionObject,
+                Source = loggingEvent.LoggerName,
             });
         }
     }

@@ -26,6 +26,8 @@ namespace WritingExporter.Common.Storage
 
             //Default
             _saveDir = "Stories";
+
+            CreateFolderIfMissing();
         }
 
         public void SaveStory(WdcInteractiveStory story)
@@ -64,7 +66,7 @@ namespace WritingExporter.Common.Storage
 
             var newList = new Collection<WdcInteractiveStory>();
 
-            foreach (var filename in Directory.GetFiles(Path.Combine(_saveDir, $"*{GetDefaultFileSuffix()}")))
+            foreach (var filename in Directory.GetFiles(_saveDir, $"*{GetDefaultFileSuffix()}", SearchOption.TopDirectoryOnly))
             {
                 try
                 {
@@ -113,6 +115,15 @@ namespace WritingExporter.Common.Storage
         public string GetDefaultFileSuffix()
         {
             return DEFAULT_FILE_SUFFIX;
+        }
+
+        private void CreateFolderIfMissing()
+        {
+            if (!Directory.Exists(_saveDir))
+            {
+                _log.Debug("Creating save directory");
+                Directory.CreateDirectory(_saveDir);
+            }
         }
     }
 }

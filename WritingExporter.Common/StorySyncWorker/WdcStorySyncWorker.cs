@@ -4,15 +4,17 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using WritingExporter.Common.Configuration;
 using WritingExporter.Common.Models;
 
-namespace WritingExporter.Common
+namespace WritingExporter.Common.StorySyncWorker
 {
-    public class WdcStorySyncWorker
+    public class WdcStorySyncWorker : IWdcStorySyncWorker
     {
         private static ILogger _log = LogManager.GetLogger(typeof(WdcStorySyncWorker));
 
-        WdcStoryContainer _storyContainer;
+        IConfigProvider _configProvider;
+        IWdcStoryContainer _storyContainer;
         IWdcReader _wdcReader;
         IWdcClient _wdcClient;
         WdcStorySyncWorkerSettings _settings;
@@ -20,21 +22,24 @@ namespace WritingExporter.Common
         Task _workerThread;
         CancellationTokenSource _ctSource;
         WdcStorySyncWorkerStatus _status;
-        object _statusLock;
-        object _settingsLock;
-        bool _syncEnabled;
+        object _statusLock = new object();
+        object _settingsLock = new object();
 
         public event EventHandler<WdcStorySyncWorkerStatusEventArgs> OnWorkerStatusChange;
 
-        public WdcStorySyncWorker(WdcStoryContainer storyContainer, IWdcReader wdcReader, IWdcClient wdcClient, WdcStorySyncWorkerSettings settings)
+        public WdcStorySyncWorker(IWdcStoryContainer storyContainer, IWdcReader wdcReader, IWdcClient wdcClient, IConfigProvider configProvider)
         {
             _storyContainer = storyContainer;
             _wdcReader = wdcReader;
             _wdcClient = wdcClient;
-            _settings = settings;
+            _configProvider = configProvider;
+            _settings = configProvider.GetSection<WdcStorySyncWorkerSettings>();
 
             // Init some stuff
             _ctSource = new CancellationTokenSource();
+            _status = new WdcStorySyncWorkerStatus();
+
+            // TODO add functionality to react to configuration changes. E.g. Cancel process, update settings, start again.
         }
 
         public void SetSettings(WdcStorySyncWorkerSettings settings)
@@ -139,6 +144,9 @@ namespace WritingExporter.Common
             }
             
             Task newTask = new Task(() => SyncWorkerLoop(), _ctSource.Token);
+            newTask.Start();
+
+            _workerThread = newTask;
         }
 
         private async void SyncWorkerLoop()
@@ -154,6 +162,12 @@ namespace WritingExporter.Common
                     _log.Debug("Pausing until next loop");
                     Thread.Sleep(GetSettings().WorkerLoopPauseMs - (int)msSinceLastLoop);
                 }
+                lastLoop = DateTime.Now;
+
+                // Are we stopped?
+                if (GetCurrentStatus().State == WdcStorySyncWorkerState.StoppedInvalidConfig) continue; // Go no further if we've been stopped
+
+                // TODO add functionality to re-start the worker if it gets stopped.
 
                 try
                 {
@@ -307,38 +321,5 @@ namespace WritingExporter.Common
         public bool SyncEnabled { get; set; } = true;
     }
 
-    public class WdcStorySyncWorkerStatusEventArgs
-    {
-        public bool StateChanged { get; set; }
-        public bool MessageChanged { get; set; }
-        public bool ProgressChanged { get; set; }
-        public bool CurrentStoryChanged { get; set; }
-        public bool CurrentChapterChanged { get; set; }
-    }
-
-    [Serializable]
-    public class WdcStorySyncWorkerStatus : ICloneable
-    {
-        public WdcStorySyncWorkerState State { get; set; } = WdcStorySyncWorkerState.Idle;
-        public string Message { get; set; }
-        public int ProgressValue { get; set; } = 0;
-        public int ProgressMax { get; set; } = 0;
-        public string CurrentStoryId { get; set; }
-        public string CurrentChapterId { get; set; }
-
-        public object Clone()
-        {
-            return this.MemberwiseClone();
-        }
-    }
-
-    public enum WdcStorySyncWorkerState
-    {
-        Idle,
-        IdleItu, //Interactives Temporarily Unavailable
-        WorkingStory,
-        WorkingOutline,
-        WorkingChapter,
-    }
-
+    
 }

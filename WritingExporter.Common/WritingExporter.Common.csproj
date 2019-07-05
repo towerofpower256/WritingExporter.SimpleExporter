@@ -64,6 +64,8 @@
     <Compile Include="IWdcClient.cs" />
     <Compile Include="IWdcReader.cs" />
     <Compile Include="IWdcStoryContainer.cs" />
+    <Compile Include="StorySyncWorker\DummyWdcStorySyncWorker.cs" />
+    <Compile Include="StorySyncWorker\IWdcStorySyncWorker.cs" />
     <Compile Include="Log4NetLogFactory.cs" />
     <Compile Include="Log4NetLogger.cs" />
     <Compile Include="LogManager.cs" />
@@ -76,11 +78,14 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Storage\IStoryFileStore.cs" />
     <Compile Include="Storage\XmlStoryFileStore.cs" />
+    <Compile Include="StorySyncWorker\WdcStorySyncWorkerState.cs" />
+    <Compile Include="StorySyncWorker\WdcStorySyncWorkerStatus.cs" />
+    <Compile Include="StorySyncWorker\WdcStorySyncWorkerStatusEventArgs.cs" />
     <Compile Include="WdcClient.cs" />
     <Compile Include="WdcReader.cs" />
     <Compile Include="Export\WdcStoryExporterHtmlCollection.cs" />
     <Compile Include="WdcStoryContainer.cs" />
-    <Compile Include="WdcStorySyncWorker.cs" />
+    <Compile Include="StorySyncWorker\WdcStorySyncWorker.cs" />
     <Compile Include="WdcUtil.cs" />
   </ItemGroup>
   <ItemGroup>

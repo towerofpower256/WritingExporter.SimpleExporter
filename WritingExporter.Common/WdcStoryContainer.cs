@@ -31,15 +31,22 @@ namespace WritingExporter.Common
         object _lock = new object();
         Task _saveCheckWorker;
         CancellationTokenSource _ctSource;
+        bool _started = false;
 
         public WdcStoryContainer(IStoryFileStore fileStore)
         {
-            _log.Debug("Starting");
-
             _fileStore = fileStore;
             _storyCollection = new Collection<WdcStoryContainerWrapper>();
+        }
 
+        public void Start()
+        {
+            if (_started) throw new InvalidOperationException("The story container has already been started, and cannot be started again.");
+
+            _log.Debug("Starting");
+            LoadAllStories();
             StartSaveWorker();
+            _started = true;
         }
 
         public void Dispose()
@@ -87,12 +94,9 @@ namespace WritingExporter.Common
                         if (sw.NeedsSave)
                         {
                             SaveStory(sw.Story);
+                            sw.NeedsSave = false;
                         }
                     }
-
-                    // Pausing
-                    ct.ThrowIfCancellationRequested();
-                    Thread.Sleep(SAVE_CHECK_INTERVAL_MS);
                 }
                 catch (OperationCanceledException ex)
                 {
@@ -102,6 +106,13 @@ namespace WritingExporter.Common
                 catch (Exception ex)
                 {
                     _log.Warn("Exception in save check worker!", ex);
+                    throw ex;
+                }
+                finally
+                {
+                    // Pausing, always
+                    ct.ThrowIfCancellationRequested();
+                    Thread.Sleep(SAVE_CHECK_INTERVAL_MS);
                 }
             }
         }
@@ -114,7 +125,7 @@ namespace WritingExporter.Common
         private void LoadStory(string filename)
         {
             _log.Debug($"Loading story: {filename}");
-            this.AddStory(_fileStore.LoadStory(filename));
+            this.LoadStory(_fileStore.LoadStory(filename));
         }
 
         private void LoadAllStories()
@@ -131,7 +142,7 @@ namespace WritingExporter.Common
             return new WdcStoryContainerWrapper()
             {
                 Story = story,
-                NeedsSave = true
+                NeedsSave = false
             };
         }
 
@@ -179,25 +190,44 @@ namespace WritingExporter.Common
 
         private WdcInteractiveStory _GetStory(string storyID)
         {
-            return _storyCollection.Where(s => s.Story.ID == storyID).SingleOrDefault().Story;
+            var storyEntry = _storyCollection.Where(s => s.Story.ID == storyID).SingleOrDefault();
+            return storyEntry?.Story;
         }
 
+        /// <summary>
+        /// Add a story to the container.
+        /// </summary>
+        /// <param name="newStory"></param>
         public void AddStory(WdcInteractiveStory newStory)
         {
             lock (_lock)
             {
-                _AddStory(newStory);
+                _AddStory(newStory, true);
             }
 
             DoEvent(newStory.ID, WdcStoryContainerEventType.Add);
         }
 
-        private void _AddStory(WdcInteractiveStory newStory)
+        /// <summary>
+        /// Add a story to the container, that doesn't need saving right away, and don't trigger any events.
+        /// </summary>
+        /// <param name="story"></param>
+        private void LoadStory(WdcInteractiveStory newStory)
+        {
+            lock (_lock)
+            {
+                _AddStory(newStory, false);
+            }
+        }
+
+        private void _AddStory(WdcInteractiveStory newStory, bool needsSave)
         {
             if (_HasStory(newStory.ID))
                 throw new Exception($"A story with the ID of '{newStory.ID}' already exists.");
 
-            _storyCollection.Add(GetNewWrapper(newStory));
+            var sw = GetNewWrapper(newStory);
+            sw.NeedsSave = needsSave;
+            _storyCollection.Add(sw);
         }
 
         public void RemoveStory(string storyID)
@@ -230,7 +260,7 @@ namespace WritingExporter.Common
                 // Copy it over, including all the chapters
                 // Remove the old story, add in the replacement
                 _RemoveStory(newStory.ID);
-                _AddStory(newStory);
+                _AddStory(newStory, true);
             }
 
             DoEvent(newStory.ID, WdcStoryContainerEventType.Update);

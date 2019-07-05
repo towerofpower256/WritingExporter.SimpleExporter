@@ -10,17 +10,13 @@ namespace WritingExporter.WinForms
 {
     static class Program
     {
-        private static SimpleInjector.Container _diContainer;
-
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
         static void Main()
         {
-
-            // Run
-            Application.Run(new MainForm());
+            new AppContext().Setup().Start();
         }
     }
 }

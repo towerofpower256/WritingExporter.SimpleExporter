@@ -9,6 +9,7 @@ using SimpleInjector;
 using WritingExporter.Common;
 using WritingExporter.Common.Configuration;
 using WritingExporter.Common.Storage;
+using WritingExporter.Common.StorySyncWorker;
 
 namespace WritingExporter.WinForms
 {
@@ -37,10 +38,13 @@ namespace WritingExporter.WinForms
             Application.SetCompatibleTextRenderingDefault(false);
 
             // Add stuff to the container
-
+            RegisterWdc();
 
             // Register all of the forms
             RegisterForms();
+
+            // Validate
+            _container.Verify();
 
             return this;
         }
@@ -53,10 +57,10 @@ namespace WritingExporter.WinForms
             _container.GetInstance<IConfigProvider>().LoadSettings();
 
             // Start the story file store
-            _container.GetInstance<WdcStoryContainer>(); // Just fetching it should instantiate it and start it.
+            _container.GetInstance<IWdcStoryContainer>().Start();
 
             // Start the story sync worker
-            _container.GetInstance<WdcStorySyncWorker>().StartWorker();
+            _container.GetInstance<IWdcStorySyncWorker>().StartWorker();
 
             // Start the GUI
             Application.Run(_container.GetInstance<Forms.MainForm>());
@@ -70,8 +74,9 @@ namespace WritingExporter.WinForms
             _container.Register<IWdcClient, WdcClient>(Lifestyle.Singleton);
             _container.Register<IWdcReader, WdcReader>(Lifestyle.Singleton);
             _container.Register<IStoryFileStore, XmlStoryFileStore>(Lifestyle.Singleton);
-            _container.Register<IWdcStoryContainer>(Lifestyle.Singleton);
-            _container.Register<WdcStorySyncWorker>(Lifestyle.Singleton); // TODO make interface
+            _container.Register<IWdcStoryContainer, WdcStoryContainer>(Lifestyle.Singleton);
+            // _container.Register<IWdcStorySyncWorker, WdcStorySyncWorker>(Lifestyle.Singleton);
+            _container.Register<IWdcStorySyncWorker, DummyWdcStorySyncWorker>(Lifestyle.Singleton);
         }
 
         private void RegisterForms()

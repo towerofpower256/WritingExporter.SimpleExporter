@@ -12,11 +12,11 @@ using WritingExporter.Common;
 
 namespace WritingExporter.WinForms.Forms
 {
-    public partial class AddStoryForm : Form
+    public partial class AddStoryWdcForm : Form
     {
-        private static ILogger _log = LogManager.GetLogger(typeof(AddStoryForm));
+        private static ILogger _log = LogManager.GetLogger(typeof(AddStoryWdcForm));
 
-        public AddStoryForm()
+        public AddStoryWdcForm()
         {
             InitializeComponent();
         }

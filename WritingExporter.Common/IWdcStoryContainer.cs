@@ -14,5 +14,6 @@ namespace WritingExporter.Common
         bool HasStory(string storyID);
         void RemoveStory(string storyID);
         void UpdateStory(WdcInteractiveStory newStory);
+        void Start();
     }
 }
