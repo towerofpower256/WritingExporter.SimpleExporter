@@ -46,12 +46,12 @@ namespace WritingExporter.Common.Configuration
             _lock = new object();
         }
 
-        public T GetSection<T>()
+        public TSection GetSection<TSection>() where TSection : BaseConfigSection
         {
-            return this.GetSection<T>(typeof(T).Name);
+            return this.GetSection<TSection>(typeof(TSection).Name);
         }
 
-        public T GetSection<T>(string sectionName)
+        public TSection GetSection<TSection>(string sectionName) where TSection : BaseConfigSection
         {
             if (string.IsNullOrEmpty(sectionName))
                 throw new ArgumentNullException("sectionName");
@@ -62,27 +62,27 @@ namespace WritingExporter.Common.Configuration
             {
                 if (_configSections.ContainsKey(sectionName))
                 {
-                    return FromXElement<T>(_configSections[sectionName]);
+                    return FromXElement<TSection>(_configSections[sectionName]);
                 }
             }
 
             // Made it out here, it wasn't a section seen before
             // Just create a new one
-            _log.Debug($"Tried to get unset section, returning default instance of type {typeof(T).Name}");
-            return (T)Activator.CreateInstance(typeof(T));
+            _log.Debug($"Tried to get unset section, returning default instance of type {typeof(TSection).Name}");
+            return (TSection)Activator.CreateInstance(typeof(TSection));
         }
 
-        public void SetSection<T>(T updatedSection)
+        public void SetSection<TSection>(TSection updatedSection) where TSection : BaseConfigSection
         {
-            this._SetSection<T>(typeof(T).Name, updatedSection);
+            this._SetSection<TSection>(typeof(TSection).Name, updatedSection);
         }
 
-        public void SetSection<T>(string sectionName, T updatedSection)
+        public void SetSection<TSection>(string sectionName, TSection updatedSection) where TSection : BaseConfigSection
         {
             this._SetSection(sectionName, updatedSection);
         }
 
-        private void _SetSection<T>(string sectionName, T updatedSection, bool silent = false)
+        private void _SetSection<TSection>(string sectionName, TSection updatedSection, bool silent = false)
         {
             if (string.IsNullOrEmpty(sectionName))
                 throw new ArgumentNullException("sectionName");
@@ -94,7 +94,7 @@ namespace WritingExporter.Common.Configuration
 
             lock (_lock)
             {
-                _configSections[sectionName] = ToXElement<T>(updatedSection);
+                _configSections[sectionName] = ToXElement<TSection>(updatedSection);
                 if (!silent) DoSectionChangedEvent(sectionName);
             }
         }
@@ -170,8 +170,12 @@ namespace WritingExporter.Common.Configuration
             {
                 using (var streamWriter = new StreamWriter(stream))
                 {
+                    // Use a custom namespace, to prevent the namespace declarations
+                    var ns = new XmlSerializerNamespaces();
+                    ns.Add(string.Empty, string.Empty);
+
                     var xmlSerializer = new XmlSerializer(typeof(T));
-                    xmlSerializer.Serialize(streamWriter, obj);
+                    xmlSerializer.Serialize(streamWriter, obj, ns);
                     return XElement.Parse(Encoding.ASCII.GetString(stream.ToArray()));
                 }
             }

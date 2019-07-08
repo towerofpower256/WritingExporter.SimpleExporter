@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace WritingExporter.Common
+namespace WritingExporter.Common.Wdc
 {
     /// <summary>
     /// Utilities for use with Writing.com.

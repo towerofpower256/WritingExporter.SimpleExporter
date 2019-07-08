@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using SimpleInjector;
 using WritingExporter.Common;
+using WritingExporter.Common.Wdc;
 using WritingExporter.Common.Configuration;
 using WritingExporter.Common.Storage;
 using WritingExporter.Common.StorySyncWorker;

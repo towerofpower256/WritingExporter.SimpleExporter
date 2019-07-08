@@ -6,6 +6,8 @@ namespace WritingExporter.Common.Storage
 {
     public interface IStoryFileStore
     {
+        void DeleteStory(string fileName);
+        void DeleteStory(WdcInteractiveStory story);
         WdcInteractiveStory DeserializeStory(Stream stream);
         WdcInteractiveStory DeserializeStory(string payload);
         WdcInteractiveStory LoadStory(string filePath);

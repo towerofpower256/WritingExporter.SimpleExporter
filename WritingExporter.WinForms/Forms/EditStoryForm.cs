@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WritingExporter.Common;
+using WritingExporter.Common.Wdc;
 using WritingExporter.Common.Models;
 
 namespace WritingExporter.WinForms.Forms

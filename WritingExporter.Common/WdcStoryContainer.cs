@@ -137,6 +137,12 @@ namespace WritingExporter.Common
             }
         }
 
+        private void DeleteStory(WdcInteractiveStory story)
+        {
+            _log.Debug($"Deleting story: {story.ID}");
+            _fileStore.DeleteStory(story);
+        }
+
         private WdcStoryContainerWrapper GetNewWrapper(WdcInteractiveStory story)
         {
             return new WdcStoryContainerWrapper()
@@ -223,7 +229,7 @@ namespace WritingExporter.Common
         private void _AddStory(WdcInteractiveStory newStory, bool needsSave)
         {
             if (_HasStory(newStory.ID))
-                throw new Exception($"A story with the ID of '{newStory.ID}' already exists.");
+                throw new ArgumentException($"A story with the ID of '{newStory.ID}' already exists.");
 
             var sw = GetNewWrapper(newStory);
             sw.NeedsSave = needsSave;
@@ -244,7 +250,9 @@ namespace WritingExporter.Common
         {
             var existingStory = _storyCollection.Where(s => s.Story.ID == storyID).SingleOrDefault();
             if (existingStory == null)
-                throw new Exception($"A story with the ID of '{storyID}' does not exist.");
+                throw new ArgumentOutOfRangeException($"A story with the ID of '{storyID}' does not exist.");
+
+            DeleteStory(existingStory.Story);
 
             _storyCollection.Remove(existingStory);
         }
@@ -255,7 +263,7 @@ namespace WritingExporter.Common
             {
                 var existingStory = _GetStory(newStory.ID);
                 if (existingStory == null)
-                    throw new Exception($"A story with the ID of '{newStory.ID}' does not exist.");
+                    throw new ArgumentOutOfRangeException($"A story with the ID of '{newStory.ID}' does not exist.");
 
                 // Copy it over, including all the chapters
                 // Remove the old story, add in the replacement

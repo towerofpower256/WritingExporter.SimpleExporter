@@ -51,18 +51,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BaseWdcClient.cs" />
+    <Compile Include="Wdc\BaseWdcClient.cs" />
+    <Compile Include="Configuration\BaseConfigSection.cs" />
     <Compile Include="Configuration\ConfigProvider.cs" />
     <Compile Include="Configuration\IConfigProvider.cs" />
     <Compile Include="Configuration\WdcClientConfiguration.cs" />
+    <Compile Include="Configuration\WdcStorySyncWorkerSettings.cs" />
     <Compile Include="Exceptions\WritingClientHtmlParseException.cs" />
     <Compile Include="Exceptions\WritingLoginFailed.cs" />
     <Compile Include="Exceptions\InteractivesTemporarilyUnavailableException.cs" />
     <Compile Include="DataUtil.cs" />
     <Compile Include="ILogFactory.cs" />
     <Compile Include="ILogger.cs" />
-    <Compile Include="IWdcClient.cs" />
-    <Compile Include="IWdcReader.cs" />
+    <Compile Include="Wdc\IWdcClient.cs" />
+    <Compile Include="Wdc\IWdcReader.cs" />
     <Compile Include="IWdcStoryContainer.cs" />
     <Compile Include="StorySyncWorker\DummyWdcStorySyncWorker.cs" />
     <Compile Include="StorySyncWorker\IWdcStorySyncWorker.cs" />
@@ -81,12 +83,12 @@
     <Compile Include="StorySyncWorker\WdcStorySyncWorkerState.cs" />
     <Compile Include="StorySyncWorker\WdcStorySyncWorkerStatus.cs" />
     <Compile Include="StorySyncWorker\WdcStorySyncWorkerStatusEventArgs.cs" />
-    <Compile Include="WdcClient.cs" />
-    <Compile Include="WdcReader.cs" />
+    <Compile Include="Wdc\WdcClient.cs" />
+    <Compile Include="Wdc\WdcReader.cs" />
     <Compile Include="Export\WdcStoryExporterHtmlCollection.cs" />
     <Compile Include="WdcStoryContainer.cs" />
     <Compile Include="StorySyncWorker\WdcStorySyncWorker.cs" />
-    <Compile Include="WdcUtil.cs" />
+    <Compile Include="Wdc\WdcUtil.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

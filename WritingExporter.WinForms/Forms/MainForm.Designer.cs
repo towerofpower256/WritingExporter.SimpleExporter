@@ -34,6 +34,8 @@
             this.tsStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.tlMain = new System.Windows.Forms.TableLayoutPanel();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.cbConsoleAutoScroll = new System.Windows.Forms.CheckBox();
             this.txtConsoleOutput = new System.Windows.Forms.TextBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.tlStoryPanel = new System.Windows.Forms.TableLayoutPanel();
@@ -45,12 +47,16 @@
             this.txtStoryInfo = new System.Windows.Forms.TextBox();
             this.menuStripMain = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.miExit = new System.Windows.Forms.ToolStripMenuItem();
             this.miAddStory = new System.Windows.Forms.ToolStripMenuItem();
             this.miAddStoryAdvanced = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.miExit = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1.SuspendLayout();
             this.tlMain.SuspendLayout();
             this.groupBox2.SuspendLayout();
+            this.tableLayoutPanel1.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.tlStoryPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvStories)).BeginInit();
@@ -102,7 +108,7 @@
             // 
             // groupBox2
             // 
-            this.groupBox2.Controls.Add(this.txtConsoleOutput);
+            this.groupBox2.Controls.Add(this.tableLayoutPanel1);
             this.groupBox2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBox2.Location = new System.Drawing.Point(591, 3);
             this.groupBox2.Name = "groupBox2";
@@ -112,16 +118,44 @@
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Console output";
             // 
+            // tableLayoutPanel1
+            // 
+            this.tableLayoutPanel1.ColumnCount = 1;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.Controls.Add(this.cbConsoleAutoScroll, 0, 1);
+            this.tableLayoutPanel1.Controls.Add(this.txtConsoleOutput, 0, 0);
+            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(3, 16);
+            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+            this.tableLayoutPanel1.RowCount = 2;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(284, 379);
+            this.tableLayoutPanel1.TabIndex = 1;
+            // 
+            // cbConsoleAutoScroll
+            // 
+            this.cbConsoleAutoScroll.AutoSize = true;
+            this.cbConsoleAutoScroll.Checked = true;
+            this.cbConsoleAutoScroll.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbConsoleAutoScroll.Enabled = false;
+            this.cbConsoleAutoScroll.Location = new System.Drawing.Point(3, 359);
+            this.cbConsoleAutoScroll.Name = "cbConsoleAutoScroll";
+            this.cbConsoleAutoScroll.Size = new System.Drawing.Size(75, 17);
+            this.cbConsoleAutoScroll.TabIndex = 0;
+            this.cbConsoleAutoScroll.Text = "Auto scroll";
+            this.cbConsoleAutoScroll.UseVisualStyleBackColor = true;
+            // 
             // txtConsoleOutput
             // 
             this.txtConsoleOutput.BackColor = System.Drawing.SystemColors.Window;
             this.txtConsoleOutput.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txtConsoleOutput.Location = new System.Drawing.Point(3, 16);
+            this.txtConsoleOutput.Location = new System.Drawing.Point(3, 3);
             this.txtConsoleOutput.Multiline = true;
             this.txtConsoleOutput.Name = "txtConsoleOutput";
             this.txtConsoleOutput.ReadOnly = true;
             this.txtConsoleOutput.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtConsoleOutput.Size = new System.Drawing.Size(284, 379);
+            this.txtConsoleOutput.Size = new System.Drawing.Size(278, 350);
             this.txtConsoleOutput.TabIndex = 0;
             // 
             // groupBox1
@@ -182,12 +216,14 @@
             // 
             // btnRemoveStory
             // 
+            this.btnRemoveStory.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnRemoveStory.Location = new System.Drawing.Point(243, 3);
             this.btnRemoveStory.Name = "btnRemoveStory";
             this.btnRemoveStory.Size = new System.Drawing.Size(30, 30);
             this.btnRemoveStory.TabIndex = 3;
             this.btnRemoveStory.Text = "X";
             this.btnRemoveStory.UseVisualStyleBackColor = true;
+            this.btnRemoveStory.Click += new System.EventHandler(this.btnRemoveStory_Click);
             // 
             // btnAddStory
             // 
@@ -234,18 +270,15 @@
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.miExit,
             this.miAddStory,
-            this.miAddStoryAdvanced});
+            this.miAddStoryAdvanced,
+            this.toolStripSeparator2,
+            this.settingsToolStripMenuItem,
+            this.toolStripSeparator1,
+            this.miExit});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
-            // 
-            // miExit
-            // 
-            this.miExit.Name = "miExit";
-            this.miExit.Size = new System.Drawing.Size(187, 22);
-            this.miExit.Text = "E&xit";
             // 
             // miAddStory
             // 
@@ -260,6 +293,29 @@
             this.miAddStoryAdvanced.Size = new System.Drawing.Size(187, 22);
             this.miAddStoryAdvanced.Text = "Add story (ad&vanced)";
             this.miAddStoryAdvanced.Click += new System.EventHandler(this.miAddStoryAdvanced_Click);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(184, 6);
+            // 
+            // settingsToolStripMenuItem
+            // 
+            this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
+            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(187, 22);
+            this.settingsToolStripMenuItem.Text = "&Settings";
+            this.settingsToolStripMenuItem.Click += new System.EventHandler(this.settingsToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(184, 6);
+            // 
+            // miExit
+            // 
+            this.miExit.Name = "miExit";
+            this.miExit.Size = new System.Drawing.Size(187, 22);
+            this.miExit.Text = "E&xit";
             // 
             // MainForm
             // 
@@ -277,7 +333,8 @@
             this.statusStrip1.PerformLayout();
             this.tlMain.ResumeLayout(false);
             this.groupBox2.ResumeLayout(false);
-            this.groupBox2.PerformLayout();
+            this.tableLayoutPanel1.ResumeLayout(false);
+            this.tableLayoutPanel1.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.tlStoryPanel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgvStories)).EndInit();
@@ -311,5 +368,10 @@
         private System.Windows.Forms.ToolStripMenuItem miAddStoryAdvanced;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.TextBox txtConsoleOutput;
+        private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+        private System.Windows.Forms.CheckBox cbConsoleAutoScroll;
     }
 }

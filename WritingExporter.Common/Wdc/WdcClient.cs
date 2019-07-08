@@ -12,7 +12,7 @@ using WritingExporter.Common.Configuration;
 using WritingExporter.Common.Exceptions;
 using WritingExporter.Common.Models;
 
-namespace WritingExporter.Common
+namespace WritingExporter.Common.Wdc
 {
     // Class to get HTML from Writing.com
     public class WdcClient : BaseWdcClient, IWdcClient

@@ -15,6 +15,7 @@ namespace WritingExporter.Common.Storage
     {
         private const string DEFAULT_FILE_SUFFIX = ".xml";
         private ILogger _log = LogManager.GetLogger(typeof(XmlStoryFileStore));
+        private XmlSerializerNamespaces _xmlNamespace;
 
         XmlSerializer _serializer;
         string _saveDir;
@@ -28,6 +29,10 @@ namespace WritingExporter.Common.Storage
             _saveDir = "Stories";
 
             CreateFolderIfMissing();
+
+            // Setup the namespace, to remove all the namespace declarations while serializing.
+            _xmlNamespace = new XmlSerializerNamespaces();
+            _xmlNamespace.Add(string.Empty, string.Empty);
         }
 
         public void SaveStory(WdcInteractiveStory story)
@@ -80,6 +85,17 @@ namespace WritingExporter.Common.Storage
             return newList;
         }
 
+        public void DeleteStory(WdcInteractiveStory story)
+        {
+            DeleteStory(Path.Combine(_saveDir, GenerateFilename(story)));
+        }
+
+        public void DeleteStory(string filePath)
+        {
+            _log.Debug($"Deleting story: {filePath}");
+            if (File.Exists(filePath)) File.Delete(filePath); // Don't want to throw an exception if the story doesn't exist.
+        }
+
         public string GenerateFilename(WdcInteractiveStory story)
         {
             return $"{story.ID}{GetDefaultFileSuffix()}";
@@ -102,14 +118,14 @@ namespace WritingExporter.Common.Storage
         {
             using (StringWriter sw = new StringWriter())
             {
-                _serializer.Serialize(sw, story);
+                _serializer.Serialize(sw, story, _xmlNamespace);
                 return sw.ToString();
             }
         }
 
         public void SerializeStory(WdcInteractiveStory story, Stream stream)
         {
-            _serializer.Serialize(stream, story);
+            _serializer.Serialize(stream, story, _xmlNamespace);
         }
 
         public string GetDefaultFileSuffix()

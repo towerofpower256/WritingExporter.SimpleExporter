@@ -8,6 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WritingExporter.Common;
+using WritingExporter.Common.Wdc;
+using WritingExporter.Common.Configuration;
 using WritingExporter.Common.Models;
 using WritingExporter.Common.StorySyncWorker;
 
@@ -21,12 +23,14 @@ namespace WritingExporter.WinForms.Forms
 
         IWdcStoryContainer _storyContainer;
         IWdcStorySyncWorker _syncWorker;
+        IConfigProvider _configProvider;
         SimpleInjector.Container _diContainer; // TODO remove dependancy on SimpleInjector to get other forms
 
         object _consoleOutputLock = new object();
 
-        public MainForm(IWdcStoryContainer storyContainer, IWdcStorySyncWorker syncWorker, SimpleInjector.Container diContainer)
+        public MainForm(IConfigProvider configProvider, IWdcStoryContainer storyContainer, IWdcStorySyncWorker syncWorker, SimpleInjector.Container diContainer)
         {
+            _configProvider = configProvider;
             _storyContainer = storyContainer;
             _diContainer = diContainer;
             _syncWorker = syncWorker;
@@ -41,9 +45,11 @@ namespace WritingExporter.WinForms.Forms
             _storyContainer.OnUpdate += new EventHandler<WdcStoryContainerEventArgs>(OnStoryContainerUpdate);
             LogManager.OnLogEvent += new EventHandler<LogEventArgs>(OnLogEvent);
             _syncWorker.OnWorkerStatusChange += new EventHandler<WdcStorySyncWorkerStatusEventArgs>(OnSyncWorkerEvent);
+
+            CheckInitialSetupRequired();
         }
 
-        #region Event stuff
+        #region Event handing stuff
 
         private void OnStoryContainerUpdate(object sender, WdcStoryContainerEventArgs args)
         {
@@ -86,7 +92,9 @@ namespace WritingExporter.WinForms.Forms
             }
             
             txtConsoleOutput.AppendText(msg + '\n');
-            txtConsoleOutput.ScrollToCaret(); // Scroll to the bottom every time we update it
+
+            // TODO: cannot disable autoscroll. Need to find a way to prevent auto scroll
+            if (cbConsoleAutoScroll.Checked) txtConsoleOutput.ScrollToCaret(); // Scroll to the bottom every time we update it
             
         }
 
@@ -218,6 +226,8 @@ namespace WritingExporter.WinForms.Forms
 
         #endregion
 
+        #region General internal functions
+
         private void ShowAddStoryDialog()
         {
             var newStoryForm = _diContainer.GetInstance<AddStoryWdcForm>();
@@ -237,6 +247,50 @@ namespace WritingExporter.WinForms.Forms
             editStoryForm.ShowDialog(this);
         }
 
+        private void ShowSettingsForm()
+        {
+            var newForm = _diContainer.GetInstance<SettingsForm>();
+            newForm.ShowDialog(this);
+        }
+
+        private void CheckInitialSetupRequired()
+        {
+            if (!_diContainer.IsVerifying) // Only do this if the container is not doing its verification process
+            {
+                var wdcClientSettings = _configProvider.GetSection<WdcClientConfiguration>();
+
+                if (string.IsNullOrEmpty(wdcClientSettings.WritingUsername) || string.IsNullOrEmpty(wdcClientSettings.WritingPassword))
+                {
+                    // Empty username or password, should show alert.
+                    MessageBox.Show(
+                        "It looks like WritingExporter has not been set up yet.\nPlease provide a Writing.com username and password.",
+                        "Setup required",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information
+                        );
+                    ShowSettingsForm();
+                }
+            }
+        }
+
+        private void RemoveSelectedStories()
+        {
+            // Get the currently selected stories
+            foreach (DataGridViewRow row in dgvStories.SelectedRows)
+            {
+                _storyContainer.RemoveStory(row.Tag.ToString());
+            }
+        }
+
+        private void RemoveStory(string storyID)
+        {
+            _storyContainer.RemoveStory(storyID);
+        }
+
+        #endregion
+
+        #region Form events
+
         private void miAddStory_Click(object sender, EventArgs e)
         {
             ShowAddStoryDialog();
@@ -247,6 +301,13 @@ namespace WritingExporter.WinForms.Forms
             ShowAddManualStoryDialog();
         }
 
+        private void settingsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowSettingsForm();
+        }
+
+        #endregion
+
         private enum StoryStatus
         {
             None,
@@ -255,26 +316,9 @@ namespace WritingExporter.WinForms.Forms
             Error
         }
 
-        /*
-        private static void SetDvgRowStatusIcon(DataGridViewRow row, StateIcon icon)
+        private void btnRemoveStory_Click(object sender, EventArgs e)
         {
-            Icon value = null;
-            switch (icon) {
-                case StateIcon.Error:
-                    value = SystemIcons.Error;
-                    break;
-                case StateIcon.Working:
-                    value = SystemIcons.
-                    break;
-            }
-
-            SystemIcons.
-
-            
+            RemoveSelectedStories();
         }
-        */
     }
-
-
-    
 }

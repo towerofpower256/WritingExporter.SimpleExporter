@@ -6,9 +6,7 @@ using System.Threading.Tasks;
 
 namespace WritingExporter.Common.Configuration
 {
-    public class WdcClientConfiguration : BaseConfigSection
+    public abstract class BaseConfigSection
     {
-        public string WritingUsername { get; set; }
-        public string WritingPassword { get; set; }
     }
 }

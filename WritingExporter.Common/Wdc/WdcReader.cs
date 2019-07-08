@@ -9,7 +9,7 @@ using WritingExporter.Common.Exceptions;
 using System.Web;
 using System.Threading;
 
-namespace WritingExporter.Common
+namespace WritingExporter.Common.Wdc
 {
     // A connection context to Writing.com. Use this to scrape content from Writing.com.
     // Not thread safe.

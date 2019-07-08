@@ -6,11 +6,11 @@ namespace WritingExporter.Common.Configuration
     {
         event EventHandler<ConfigSectionChangedEventArgs> OnSectionChanged;
 
-        T GetSection<T>();
-        T GetSection<T>(string sectionName);
+        TSection GetSection<TSection>() where TSection : BaseConfigSection;
+        TSection GetSection<TSection>(string sectionName) where TSection : BaseConfigSection;
         void LoadSettings();
         void SaveSettings();
-        void SetSection<T>(string sectionName, T updatedSection);
-        void SetSection<T>(T updatedSection);
+        void SetSection<TSection>(string sectionName, TSection updatedSection) where TSection : BaseConfigSection;
+        void SetSection<TSection>(TSection updatedSection) where TSection : BaseConfigSection;
     }
 }

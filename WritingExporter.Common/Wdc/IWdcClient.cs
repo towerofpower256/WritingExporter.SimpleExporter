@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using WritingExporter.Common.Models;
 
-namespace WritingExporter.Common
+namespace WritingExporter.Common.Wdc
 {
     public interface IWdcClient
     {
