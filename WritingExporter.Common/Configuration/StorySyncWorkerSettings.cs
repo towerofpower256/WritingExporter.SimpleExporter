@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace WritingExporter.Common.Configuration
 {
-    public class WdcStorySyncWorkerSettings : BaseConfigSection
+    public class StorySyncWorkerSettings : BaseConfigSection
     {
         // Refresh story details after this many seconds.
         // Default: 10 days
@@ -31,5 +31,9 @@ namespace WritingExporter.Common.Configuration
         // Is sync enabled?
         // Default: yes
         public bool SyncEnabled { get; set; } = true;
+
+        // How many seconds to not sync anything for that story after an Interactives Temporarily Unavailable message is encountered.
+        // Default: 15
+        public int ItuPauseDuration { get; set; }
     }
 }

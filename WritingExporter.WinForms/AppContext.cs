@@ -61,7 +61,7 @@ namespace WritingExporter.WinForms
             _container.GetInstance<IWdcStoryContainer>().Start();
 
             // Start the story sync worker
-            _container.GetInstance<IWdcStorySyncWorker>().StartWorker();
+            _container.GetInstance<IStorySyncWorker>().StartWorker();
 
             // Start the GUI
             Application.Run(_container.GetInstance<Forms.MainForm>());
@@ -77,7 +77,7 @@ namespace WritingExporter.WinForms
             _container.Register<IStoryFileStore, XmlStoryFileStore>(Lifestyle.Singleton);
             _container.Register<IWdcStoryContainer, WdcStoryContainer>(Lifestyle.Singleton);
             // _container.Register<IWdcStorySyncWorker, WdcStorySyncWorker>(Lifestyle.Singleton);
-            _container.Register<IWdcStorySyncWorker, DummyStorySyncWorker>(Lifestyle.Singleton);
+            _container.Register<IStorySyncWorker, DummyStorySyncWorker>(Lifestyle.Singleton);
         }
 
         private void RegisterForms()

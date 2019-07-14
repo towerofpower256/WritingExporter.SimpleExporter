@@ -18,17 +18,17 @@ namespace WritingExporter.WinForms.Forms
     public partial class MainForm : Form
     {
         private const string COL_NAME_STATUS = "Status";
+        private const string COL_NAME_PROGRESS = "Progess";
+        private const string DEFAULT_PROGRESS_VALUE = "-";
 
         private static ILogger _log = LogManager.GetLogger(typeof(AddStoryWdcForm));
 
         IWdcStoryContainer _storyContainer;
-        IWdcStorySyncWorker _syncWorker;
+        IStorySyncWorker _syncWorker;
         IConfigProvider _configProvider;
         SimpleInjector.Container _diContainer; // TODO remove dependancy on SimpleInjector to get other forms
 
-        object _consoleOutputLock = new object();
-
-        public MainForm(IConfigProvider configProvider, IWdcStoryContainer storyContainer, IWdcStorySyncWorker syncWorker, SimpleInjector.Container diContainer)
+        public MainForm(IConfigProvider configProvider, IWdcStoryContainer storyContainer, IStorySyncWorker syncWorker, SimpleInjector.Container diContainer)
         {
             _configProvider = configProvider;
             _storyContainer = storyContainer;
@@ -40,11 +40,13 @@ namespace WritingExporter.WinForms.Forms
             // Set a few things up
             InitStoryList();
             RefreshStoryList();
+            UpdateStatusMessage(_syncWorker.GetCurrentStatus().Message);
 
             // Subscribe to some events
-            _storyContainer.OnUpdate += new EventHandler<WdcStoryContainerEventArgs>(OnStoryContainerUpdate);
             LogManager.OnLogEvent += new EventHandler<LogEventArgs>(OnLogEvent);
-            _syncWorker.OnWorkerStatusChange += new EventHandler<StorySyncWorkerStatusEventArgs>(OnSyncWorkerEvent);
+            _storyContainer.OnUpdate += new EventHandler<WdcStoryContainerEventArgs>(OnStoryContainerUpdate);
+            _syncWorker.OnWorkerStatusChange += new EventHandler<StorySyncWorkerStatusEventArgs>(OnSyncWorkerStatusEvent);
+            _syncWorker.OnStoryStatusChange += new EventHandler<StorySyncWorkerStoryStatusEventArgs>(OnSyncWorkerStoryStatusEvent);
 
             CheckInitialSetupRequired();
         }
@@ -74,9 +76,14 @@ namespace WritingExporter.WinForms.Forms
             AppendToConsoleOutput(sb.ToString());
         }
 
-        private void OnSyncWorkerEvent(object sender, StorySyncWorkerStatusEventArgs args)
+        private void OnSyncWorkerStatusEvent(object sender, StorySyncWorkerStatusEventArgs args)
         {
-            
+            UpdateStatusMessage(args.NewStatus.Message); // Update the bottom status message with the sync worker's last message
+        }
+
+        private void OnSyncWorkerStoryStatusEvent(object sender, StorySyncWorkerStoryStatusEventArgs args)
+        {
+            UpdateStoryStatus(args.NewStatus.StoryID, args.NewStatus);
         }
 
         #endregion
@@ -120,6 +127,12 @@ namespace WritingExporter.WinForms.Forms
             statusIconColumn.DefaultCellStyle.NullValue = null;
             dgvStories.Columns.Add(statusIconColumn);
 
+            // Progress column
+            var progressColumn = new DataGridViewTextBoxColumn();
+            progressColumn.Name = COL_NAME_PROGRESS;
+            progressColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            dgvStories.Columns.Add(progressColumn);
+
             // Name column
             var nameColumn = new DataGridViewTextBoxColumn();
             nameColumn.Name = "Name";
@@ -144,77 +157,28 @@ namespace WritingExporter.WinForms.Forms
             // Fill
             foreach (var story in _storyContainer.GetAllStories())
             {
-                var newRow = new DataGridViewRow();
-                newRow.Tag = story.ID;
-                newRow.Cells.Add(new DataGridViewTextBoxCell() { Value = null });
-                newRow.Cells.Add(new DataGridViewTextBoxCell() { Value = story.Name, ToolTipText = story.Name });
-
-                dgvStories.Rows.Add(newRow);
+                _AddStoryRow(story);
             }
         }
 
-        private void UpdateStoryListFromSyncWorker()
-        {
-            UpdateStoryListFromSyncWorker(_syncWorker.GetCurrentStatus());
-        }
+        
 
-        private void UpdateStoryListFromSyncWorker(StorySyncWorkerStatus syncStatus)
-        {
-            foreach (DataGridViewRow row in dgvStories.Rows)
-            {
-                var storyID = row.Tag.ToString();
-
-                // Try to find the story in the sync worker
-                if (syncStatus.StoryStatus.ContainsKey(storyID))
-                {
-                    var storyStatus = syncStatus.StoryStatus[storyID];
-                    var cell = row.Cells[COL_NAME_STATUS];
-
-                    var newValue = "";
-                    var newTooltip = "";
-
-                    // Update the status
-                    switch (storyStatus.State)
-                    {
-                        case StorySyncWorkerStatus.StoryStatusEntryState.Error:
-                            newValue = "Error";
-                            newTooltip = storyStatus.ErrorMessage;
-                            break;
-                        case StorySyncWorkerStatus.StoryStatusEntryState.WaitingItu:
-                            newValue = "Waiting";
-                            newTooltip = $"Interactive temporarily unavailable. Last seen at {storyStatus.LastItu}";
-                            break;
-                        case StorySyncWorkerStatus.StoryStatusEntryState.Working:
-                            newValue = "Working";
-                            break;
-                    }
-
-                    cell.Value = newValue;
-                    cell.ToolTipText = newTooltip;
-                }
-            }
-        }
-
-        private delegate void UpdateStoryStatusDelegate(string storyID, StoryStatus status, string statusMessage);
-        private void UpdateStoryStatus(string storyID, StoryStatus status, string statusMessage)
+        private delegate void UpdateStoryStatusDelegate(string storyID, StorySyncWorkerStoryStatus status);
+        private void UpdateStoryStatus(string storyID, StorySyncWorkerStoryStatus status)
         {
             if (dgvStories.InvokeRequired)
             {
-                this.Invoke(new UpdateStoryStatusDelegate(UpdateStoryStatus), storyID, status, statusMessage);
+                this.Invoke(new UpdateStoryStatusDelegate(UpdateStoryStatus), storyID, status);
             }
 
-            _log.Debug($"Updating story '{storyID}' with status '{status}'");
-
-            if (string.IsNullOrEmpty(statusMessage)) statusMessage = status.ToString(); // Default the message to the name of the status enum
+            _log.Debug($"Updating story status '{storyID}'");
 
             foreach (DataGridViewRow row in dgvStories.Rows)
             {
                 // Find the story row
                 if (row.Tag.ToString() == storyID)
                 {
-                    var cell = (DataGridViewTextBoxCell)row.Cells[COL_NAME_STATUS];
-                    cell.Value = status.ToString();
-                    cell.ToolTipText = statusMessage;
+                    UpdateStoryListRowStatus(row, status);
 
                     return; // Go no further
                 }
@@ -222,6 +186,18 @@ namespace WritingExporter.WinForms.Forms
 
             // Made it out here, didn't find the story
             _log.Debug($"Couldn't find a row for that story {storyID}. Something is wrong.");
+        }
+
+        private delegate void UpdateStatusMessageDelegate(string msg);
+        private void UpdateStatusMessage(string msg)
+        {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new UpdateStatusMessageDelegate(UpdateStatusMessage), msg);
+                return;
+            }
+
+            tsStatus.Text = msg;
         }
 
         #endregion
@@ -287,6 +263,74 @@ namespace WritingExporter.WinForms.Forms
             _storyContainer.RemoveStory(storyID);
         }
 
+        // Update a single list row with the sync status from the sync worker
+        private void UpdateStoryListRow(DataGridViewRow row, StorySyncWorkerStoryStatus status)
+        {
+            // Update the status indicator
+            UpdateStoryListRowStatus(row, status);
+            UpdateStoryListRowProgress(row, status);
+        }
+
+        // WARNING: Is not thread safe.
+        private void UpdateStoryListRowProgress(DataGridViewRow row, StorySyncWorkerStoryStatus status)
+        {
+            var newProgValue = DEFAULT_PROGRESS_VALUE;
+            if (status.ProgressMax > 0)
+            {
+                newProgValue = $"{status.ProgressValue} / {status.ProgressMax}";
+            }
+
+            var progCell = row.Cells[COL_NAME_PROGRESS];
+            progCell.Value = newProgValue;
+        }
+
+        // WARNING: is not thread safe.
+        private void UpdateStoryListRowStatus(DataGridViewRow row, StorySyncWorkerStoryStatus status)
+        {
+            // Update the status
+            var statusCell = row.Cells[COL_NAME_STATUS];
+
+            var newValue = "";
+            var newTooltip = "";
+
+            // Update the status
+            switch (status.State)
+            {
+                case StorySyncWorkerStoryState.Error:
+                    newValue = "Error";
+                    newTooltip = status.ErrorMessage;
+                    break;
+                case StorySyncWorkerStoryState.WaitingItu:
+                    newValue = "Waiting";
+                    newTooltip = $"Interactive temporarily unavailable. Last seen at {status.StateLastSet}";
+                    break;
+                case StorySyncWorkerStoryState.Working:
+                    newValue = "Working";
+                    break;
+                case StorySyncWorkerStoryState.Paused:
+                    newValue = "Paused";
+                    break;
+            }
+
+            statusCell.Value = newValue;
+            statusCell.ToolTipText = newTooltip;
+        }
+
+        // WARNING: is not thread safe
+        private void _AddStoryRow(WdcInteractiveStory story)
+        {
+            var newRow = new DataGridViewRow();
+            newRow.Tag = story.ID;
+            newRow.Cells.Add(new DataGridViewTextBoxCell() { Value = null });
+            newRow.Cells.Add(new DataGridViewTextBoxCell() { Value = null });
+            newRow.Cells.Add(new DataGridViewTextBoxCell() { Value = story.Name, ToolTipText = story.Name });
+
+            dgvStories.Rows.Add(newRow);
+
+            // Update row from sync status
+            UpdateStoryListRow(newRow, _syncWorker.GetStoryStatus(story.ID));
+        }
+
         #endregion
 
         #region Form events
@@ -306,19 +350,11 @@ namespace WritingExporter.WinForms.Forms
             ShowSettingsForm();
         }
 
-        #endregion
-
-        private enum StoryStatus
-        {
-            None,
-            Working,
-            Waiting,
-            Error
-        }
-
         private void btnRemoveStory_Click(object sender, EventArgs e)
         {
             RemoveSelectedStories();
         }
+
+        #endregion
     }
 }
