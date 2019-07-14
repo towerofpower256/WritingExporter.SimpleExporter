@@ -77,7 +77,7 @@ namespace WritingExporter.WinForms
             _container.Register<IStoryFileStore, XmlStoryFileStore>(Lifestyle.Singleton);
             _container.Register<IWdcStoryContainer, WdcStoryContainer>(Lifestyle.Singleton);
             // _container.Register<IWdcStorySyncWorker, WdcStorySyncWorker>(Lifestyle.Singleton);
-            _container.Register<IWdcStorySyncWorker, DummyWdcStorySyncWorker>(Lifestyle.Singleton);
+            _container.Register<IWdcStorySyncWorker, DummyStorySyncWorker>(Lifestyle.Singleton);
         }
 
         private void RegisterForms()

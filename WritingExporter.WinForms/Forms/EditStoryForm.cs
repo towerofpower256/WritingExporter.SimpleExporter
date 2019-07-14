@@ -49,7 +49,7 @@ namespace WritingExporter.WinForms.Forms
             txtStoryID.Text = _story.ID;
             txtStoryShortDescription.Text = _story.ShortDescription;
             txtStoryDescription.Text = _story.Description;
-            dtpLastUpdated.Value = _story.LastUpdated;
+            dtpLastUpdated.Value = _story.LastUpdatedInfo;
         }
 
         private void AddChangesToStory()

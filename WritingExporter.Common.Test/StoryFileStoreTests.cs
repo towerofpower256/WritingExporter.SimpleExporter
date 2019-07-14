@@ -58,7 +58,7 @@ namespace WritingExporter.Common.Test
             _testStory.Author = testAuthor;
             _testStory.ID = "123456-test-story-my-dude";
             _testStory.Name = "Test Story 2: Electric Bogaloo";
-            _testStory.LastUpdated = DateTime.Now;
+            _testStory.LastUpdatedInfo = DateTime.Now;
             _testStory.Url = "http://test.local/test-story-my-dude";
             _testStory.ShortDescription = "Some story happened";
             _testStory.Description = "<p>I am a test description</p>" +

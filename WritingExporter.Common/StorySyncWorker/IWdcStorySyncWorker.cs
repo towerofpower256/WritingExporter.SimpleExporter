@@ -4,9 +4,9 @@ namespace WritingExporter.Common.StorySyncWorker
 {
     public interface IWdcStorySyncWorker
     {
-        event EventHandler<WdcStorySyncWorkerStatusEventArgs> OnWorkerStatusChange;
+        event EventHandler<StorySyncWorkerStatusEventArgs> OnWorkerStatusChange;
 
-        WdcStorySyncWorkerStatus GetCurrentStatus();
+        StorySyncWorkerStatus GetCurrentStatus();
         void StartWorker();
     }
 }

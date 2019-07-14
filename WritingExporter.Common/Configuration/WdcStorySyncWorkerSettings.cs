@@ -16,6 +16,10 @@ namespace WritingExporter.Common.Configuration
         // Default: 10 days
         public int SyncChapterIntervalSeconds { get; set; } = 864000;
 
+        // Check the chapter map for new chapters after this many seconds.
+        // Default: 6 hours
+        public int SyncChapterOutlineIntervalSeconds { get; set; } = 21600;
+
         // Should chapters that have already been scraped be updated again? Default: no
         public bool UpdateKnownChapters { get; set; } = false;
 

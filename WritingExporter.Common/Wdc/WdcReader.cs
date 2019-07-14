@@ -41,7 +41,7 @@ namespace WritingExporter.Common.Wdc
             story.Name = GetInteractiveStoryTitle(wdcPayload);
             story.ShortDescription = GetInteractiveStoryShortDescription(wdcPayload);
             story.Description = GetInteractiveStoryDescription(wdcPayload);
-            story.LastUpdated = DateTime.Now;
+            story.LastUpdatedInfo = DateTime.Now;
 
             return story;
         }

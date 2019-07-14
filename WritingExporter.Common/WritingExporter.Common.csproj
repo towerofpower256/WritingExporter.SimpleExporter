@@ -51,6 +51,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="StorySyncWorker\StorySyncWorkerStoryStatus.cs" />
+    <Compile Include="StorySyncWorker\StorySyncWorkerStoryStatusEventArgs.cs" />
     <Compile Include="Wdc\BaseWdcClient.cs" />
     <Compile Include="Configuration\BaseConfigSection.cs" />
     <Compile Include="Configuration\ConfigProvider.cs" />
@@ -66,7 +68,7 @@
     <Compile Include="Wdc\IWdcClient.cs" />
     <Compile Include="Wdc\IWdcReader.cs" />
     <Compile Include="IWdcStoryContainer.cs" />
-    <Compile Include="StorySyncWorker\DummyWdcStorySyncWorker.cs" />
+    <Compile Include="StorySyncWorker\DummyStorySyncWorker.cs" />
     <Compile Include="StorySyncWorker\IWdcStorySyncWorker.cs" />
     <Compile Include="Log4NetLogFactory.cs" />
     <Compile Include="Log4NetLogger.cs" />
@@ -80,14 +82,14 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Storage\IStoryFileStore.cs" />
     <Compile Include="Storage\XmlStoryFileStore.cs" />
-    <Compile Include="StorySyncWorker\WdcStorySyncWorkerState.cs" />
-    <Compile Include="StorySyncWorker\WdcStorySyncWorkerStatus.cs" />
-    <Compile Include="StorySyncWorker\WdcStorySyncWorkerStatusEventArgs.cs" />
+    <Compile Include="StorySyncWorker\StorySyncWorkerState.cs" />
+    <Compile Include="StorySyncWorker\StorySyncWorkerStatus.cs" />
+    <Compile Include="StorySyncWorker\StorySyncWorkerStatusEventArgs.cs" />
     <Compile Include="Wdc\WdcClient.cs" />
     <Compile Include="Wdc\WdcReader.cs" />
     <Compile Include="Export\WdcStoryExporterHtmlCollection.cs" />
     <Compile Include="WdcStoryContainer.cs" />
-    <Compile Include="StorySyncWorker\WdcStorySyncWorker.cs" />
+    <Compile Include="StorySyncWorker\StorySyncWorker.cs" />
     <Compile Include="Wdc\WdcUtil.cs" />
   </ItemGroup>
   <ItemGroup>

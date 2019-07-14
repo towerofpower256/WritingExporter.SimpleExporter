@@ -6,21 +6,21 @@ using System.Threading.Tasks;
 
 namespace WritingExporter.Common.StorySyncWorker
 {
-    public class DummyWdcStorySyncWorker : IWdcStorySyncWorker
+    public class DummyStorySyncWorker : IWdcStorySyncWorker
     {
-        WdcStorySyncWorkerStatus _status;
+        StorySyncWorkerStatus _status;
 
-        public DummyWdcStorySyncWorker()
+        public DummyStorySyncWorker()
         {
-            _status = new WdcStorySyncWorkerStatus()
+            _status = new StorySyncWorkerStatus()
             {
                 Message = "Dummy sync worker, will do nothing."
             };
         }
 
-        public event EventHandler<WdcStorySyncWorkerStatusEventArgs> OnWorkerStatusChange;
+        public event EventHandler<StorySyncWorkerStatusEventArgs> OnWorkerStatusChange;
 
-        public WdcStorySyncWorkerStatus GetCurrentStatus()
+        public StorySyncWorkerStatus GetCurrentStatus()
         {
             return _status;
         }

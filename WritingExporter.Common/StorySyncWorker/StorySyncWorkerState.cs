@@ -6,10 +6,9 @@ using System.Threading.Tasks;
 
 namespace WritingExporter.Common.StorySyncWorker
 {
-    public enum WdcStorySyncWorkerState
+    public enum StorySyncWorkerState
     {
         Idle,
-        IdleItu, //Interactives Temporarily Unavailable
         WorkingStory,
         WorkingOutline,
         WorkingChapter,

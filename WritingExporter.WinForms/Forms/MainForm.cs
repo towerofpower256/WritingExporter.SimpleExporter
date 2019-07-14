@@ -44,7 +44,7 @@ namespace WritingExporter.WinForms.Forms
             // Subscribe to some events
             _storyContainer.OnUpdate += new EventHandler<WdcStoryContainerEventArgs>(OnStoryContainerUpdate);
             LogManager.OnLogEvent += new EventHandler<LogEventArgs>(OnLogEvent);
-            _syncWorker.OnWorkerStatusChange += new EventHandler<WdcStorySyncWorkerStatusEventArgs>(OnSyncWorkerEvent);
+            _syncWorker.OnWorkerStatusChange += new EventHandler<StorySyncWorkerStatusEventArgs>(OnSyncWorkerEvent);
 
             CheckInitialSetupRequired();
         }
@@ -74,7 +74,7 @@ namespace WritingExporter.WinForms.Forms
             AppendToConsoleOutput(sb.ToString());
         }
 
-        private void OnSyncWorkerEvent(object sender, WdcStorySyncWorkerStatusEventArgs args)
+        private void OnSyncWorkerEvent(object sender, StorySyncWorkerStatusEventArgs args)
         {
             
         }
@@ -158,7 +158,7 @@ namespace WritingExporter.WinForms.Forms
             UpdateStoryListFromSyncWorker(_syncWorker.GetCurrentStatus());
         }
 
-        private void UpdateStoryListFromSyncWorker(WdcStorySyncWorkerStatus syncStatus)
+        private void UpdateStoryListFromSyncWorker(StorySyncWorkerStatus syncStatus)
         {
             foreach (DataGridViewRow row in dgvStories.Rows)
             {
@@ -176,15 +176,15 @@ namespace WritingExporter.WinForms.Forms
                     // Update the status
                     switch (storyStatus.State)
                     {
-                        case WdcStorySyncWorkerStatus.StoryStatusEntryState.Error:
+                        case StorySyncWorkerStatus.StoryStatusEntryState.Error:
                             newValue = "Error";
                             newTooltip = storyStatus.ErrorMessage;
                             break;
-                        case WdcStorySyncWorkerStatus.StoryStatusEntryState.WaitingItu:
+                        case StorySyncWorkerStatus.StoryStatusEntryState.WaitingItu:
                             newValue = "Waiting";
                             newTooltip = $"Interactive temporarily unavailable. Last seen at {storyStatus.LastItu}";
                             break;
-                        case WdcStorySyncWorkerStatus.StoryStatusEntryState.Working:
+                        case StorySyncWorkerStatus.StoryStatusEntryState.Working:
                             newValue = "Working";
                             break;
                     }
