@@ -12,6 +12,8 @@ namespace WritingExporter.Common
 
         private static ILogFactory _logFactory;
 
+        public static event EventHandler<LogEventArgs> OnLogEvent;
+
         public static void SetLogFactory(ILogFactory logFactory)
         {
             _logFactory = logFactory;
@@ -38,8 +40,6 @@ namespace WritingExporter.Common
         {
             OnLogEvent?.Invoke(sender, args);
         }
-
-        public static event EventHandler<LogEventArgs> OnLogEvent;
     }
 
     public class LogEventArgs : EventArgs

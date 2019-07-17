@@ -8,6 +8,7 @@ namespace WritingExporter.Common.StorySyncWorker
 {
     public class StorySyncWorkerStoryStatusEventArgs : EventArgs
     {
+        public StorySyncWorkerStoryStatus OldStatus { get; set; }
         public StorySyncWorkerStoryStatus NewStatus { get; set; }
     }
 }

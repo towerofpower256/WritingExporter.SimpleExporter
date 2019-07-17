@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 using WritingExporter.Common.Models;
 using WritingExporter.Common.Exceptions;
+using WritingExporter.Common.Wdc;
 
 namespace WritingExporter.Common.Test
 {

@@ -57,6 +57,7 @@
     <Compile Include="TestConfigSections\TestAppConfig.cs" />
     <Compile Include="TestConfigSections\TestUiConfigSection.cs" />
     <Compile Include="TestUtil.cs" />
+    <Compile Include="FileDumperTest.cs" />
     <Compile Include="WdcReaderTests.cs" />
   </ItemGroup>
   <ItemGroup>

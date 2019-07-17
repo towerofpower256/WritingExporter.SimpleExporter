@@ -143,7 +143,13 @@ namespace WritingExporter.Common.StorySyncWorker
 
         private void DoStoryStatusChange(StorySyncWorkerStoryStatus newStatus)
         {
-            OnStoryStatusChange?.Invoke(this, new StorySyncWorkerStoryStatusEventArgs() { NewStatus = newStatus });
+            var oldStatus = GetStoryStatus(newStatus.StoryID);
+            DoStoryStatusChange(oldStatus, newStatus);
+        }
+
+        private void DoStoryStatusChange(StorySyncWorkerStoryStatus oldStatus, StorySyncWorkerStoryStatus newStatus)
+        {
+            OnStoryStatusChange?.Invoke(this, new StorySyncWorkerStoryStatusEventArgs() { OldStatus = oldStatus, NewStatus = newStatus });
         }
 
         #endregion
