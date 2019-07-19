@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WritingExporter.Common.StorySyncWorker
+namespace WritingExporter.Common.StorySync
 {
     public class DummyStorySyncWorker : IStorySyncWorker
     {

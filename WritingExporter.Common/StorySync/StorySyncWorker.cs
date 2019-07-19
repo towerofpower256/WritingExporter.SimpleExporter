@@ -7,25 +7,32 @@ using System.Threading;
 using System.Threading.Tasks;
 using WritingExporter.Common.Configuration;
 using WritingExporter.Common.Exceptions;
+using WritingExporter.Common.Gui;
 using WritingExporter.Common.Models;
+using WritingExporter.Common.Storage;
 using WritingExporter.Common.Wdc;
 
-namespace WritingExporter.Common.StorySyncWorker
+namespace WritingExporter.Common.StorySync
 {
     public class StorySyncWorker : IStorySyncWorker
     {
         private static ILogger _log = LogManager.GetLogger(typeof(StorySyncWorker));
 
+        // Services
         IConfigProvider _configProvider;
         IWdcStoryContainer _storyContainer;
         IWdcReader _wdcReader;
         IWdcClient _wdcClient;
-        StorySyncWorkerSettings _settings;
+        IFileDumper _fileDumper;
+        IGuiContext _gui;
 
+        // Working variables
+        StorySyncWorkerSettings _settings;
         Task _workerThread;
         CancellationTokenSource _ctSource;
         StorySyncWorkerStatus _status;
         Dictionary<string, StorySyncWorkerStoryStatus> _storyStatusList;
+        int _lastStoryIndex = 0;
         object _storyStatusLock = new object();
         object _statusLock = new object();
         object _settingsLock = new object();
@@ -33,13 +40,21 @@ namespace WritingExporter.Common.StorySyncWorker
         public event EventHandler<StorySyncWorkerStatusEventArgs> OnWorkerStatusChange;
         public event EventHandler<StorySyncWorkerStoryStatusEventArgs> OnStoryStatusChange;
 
-        public StorySyncWorker(IWdcStoryContainer storyContainer, IWdcReader wdcReader, IWdcClient wdcClient, IConfigProvider configProvider)
+        public StorySyncWorker(IWdcStoryContainer storyContainer,
+            IWdcReader wdcReader,
+            IWdcClient wdcClient,
+            IConfigProvider configProvider,
+            IFileDumper fileDumper,
+            IGuiContext guiContext
+            )
         {
             _storyContainer = storyContainer;
             _wdcReader = wdcReader;
             _wdcClient = wdcClient;
             _configProvider = configProvider;
-            _settings = configProvider.GetSection<StorySyncWorkerSettings>();
+            _fileDumper = fileDumper;
+            _gui = guiContext;
+            SetSettings(configProvider.GetSection<StorySyncWorkerSettings>());
 
             // Init some stuff
             _storyStatusList = new Dictionary<string, StorySyncWorkerStoryStatus>();
@@ -47,23 +62,76 @@ namespace WritingExporter.Common.StorySyncWorker
             _status = new StorySyncWorkerStatus();
 
             // TODO add functionality to react to configuration changes. E.g. Cancel process, update settings, start again.
+            // Subscribe to some events
+            _storyContainer.OnUpdate += new EventHandler<WdcStoryContainerEventArgs>(OnStoryContainerChanged);
+            _configProvider.OnSectionChanged += new EventHandler<ConfigSectionChangedEventArgs>(OnSettingsChanged);
         }
+
+        #region Event handling stuff
+
+        private void OnSettingsChanged(object sender, ConfigSectionChangedEventArgs args)
+        {
+            if (args.SectionName == typeof(StorySyncWorkerSettings).Name)
+            {
+                // The sync worker settings have changed.
+                // Update the settings
+                // TODO: should I cancel the worker, and have it start again?
+                _log.Debug("Reacting to a change in settings");
+                SetSettings(_configProvider.GetSection<StorySyncWorkerSettings>());
+            }
+        }
+
+        private void OnStoryContainerChanged(object sender, WdcStoryContainerEventArgs args)
+        {
+            //_log.Debug("Reacting to a change in stories");
+
+            // TODO: instead of cancelling the sync,
+            //    try to make the sync loop smart enough to react to changes in either syncing or about to sync stories
+
+            // Was the current story removed?
+            if (args.EventType == WdcStoryContainerEventType.Remove && args.StoryID == GetCurrentStatus().CurrentStoryID)
+            {
+                _log.Debug("The story being synced was removed, reacting");
+                Cancel();
+            }
+            
+        }
+
+        #endregion
 
         #region Story status stuff
 
+        private void SetStoryStatusError(string storyID, string errorMsg)
+        {
+            var currentStatus = GetStoryStatus(storyID);
+            currentStatus.State = StorySyncWorkerStoryState.Error;
+            currentStatus.ErrorMessage = errorMsg;
+            SetStoryStatus(currentStatus);
+        }
+
         private void SetStoryStatusState(string storyID, StorySyncWorkerStoryState newState)
         {
-            var status = GetStoryStatus(storyID);
-            status.State = newState;
-            SetStoryStatus(status);
+            var currentStatus = GetStoryStatus(storyID);
+
+            // Don't care if we try to change the state to what it already is
+            if (currentStatus.State != newState)
+            {
+                currentStatus.State = newState;
+                SetStoryStatus(currentStatus);
+            }
         }
 
         private void SetStoryStatusProgress(string storyID, int progressValue, int progressMax)
         {
-            var status = GetStoryStatus(storyID);
-            status.ProgressValue = progressValue;
-            status.ProgressMax = progressMax;
-            SetStoryStatus(status);
+            var currentStatus = GetStoryStatus(storyID);
+
+            // Don't care if we try to change the progress to what it already is
+            if (currentStatus.ProgressMax != progressMax || currentStatus.ProgressValue != progressValue)
+            {
+                currentStatus.ProgressValue = progressValue;
+                currentStatus.ProgressMax = progressMax;
+                SetStoryStatus(currentStatus);
+            }
         }
 
         public void SetStoryStatus(StorySyncWorkerStoryStatus newStatus)
@@ -81,7 +149,7 @@ namespace WritingExporter.Common.StorySyncWorker
             if (newStatus == null) throw new ArgumentNullException("newStatus");
 
             var storyID = newStatus.StoryID;
-            if (_storyStatusList.ContainsKey(storyID))
+            if (!_storyStatusList.ContainsKey(storyID))
             {
                 _storyStatusList.Add(storyID, newStatus);
             }
@@ -177,6 +245,16 @@ namespace WritingExporter.Common.StorySyncWorker
             _SetCurrentStatus(status);
         }
 
+        private void SetCurrentStatus(StorySyncWorkerState state, string msg, string storyID)
+        {
+            var status = GetCurrentStatus();
+            status.State = state;
+            status.Message = msg;
+            status.CurrentStoryID = storyID;
+
+            _SetCurrentStatus(status);
+        }
+
         private void _SetCurrentStatus(StorySyncWorkerStatus newStatus)
         {
             var currentStatus = this.GetCurrentStatus();
@@ -213,16 +291,17 @@ namespace WritingExporter.Common.StorySyncWorker
         private void Cancel()
         {
             _log.Info("Cancelling sync");
-            _ctSource.Cancel();
+            _ctSource?.Cancel();
             RefreshCTSource();
         }
 
         private void RefreshCTSource()
         {
-            _ctSource.Dispose();
+            _ctSource?.Dispose();
             _ctSource = new CancellationTokenSource();
         }
 
+        // TODO: Sync now functionality, to be able to specify which story to sync right now
 
         public void StartWorker()
         {
@@ -240,16 +319,18 @@ namespace WritingExporter.Common.StorySyncWorker
 
         private async void SyncWorkerLoop()
         {
-            _log.Info("Sync worker loop starting");
-            var lastLoop = DateTime.Now - new TimeSpan(0, 0, 0, GetSettings().WorkerLoopPauseMs);
+            _log.Info("Sync worker starting");
+            var lastLoop = DateTime.Now - new TimeSpan(0, 0, 0, 0, GetSettings().WorkerLoopPauseMs);
             while (true)
             {
                 // Should we pause?
+                int pauseIntervalMs = GetSettings().WorkerLoopPauseMs;
                 var msSinceLastLoop = (DateTime.Now - lastLoop).TotalMilliseconds;
-                if (msSinceLastLoop < GetSettings().WorkerLoopPauseMs)
+                if (msSinceLastLoop < pauseIntervalMs)
                 {
                     _log.Debug("Pausing until next loop");
-                    Thread.Sleep(GetSettings().WorkerLoopPauseMs - (int)msSinceLastLoop);
+                    int pauseDuration = pauseIntervalMs - Convert.ToInt32(msSinceLastLoop);
+                    Thread.Sleep(pauseDuration);
                 }
                 lastLoop = DateTime.Now;
 
@@ -286,92 +367,176 @@ namespace WritingExporter.Common.StorySyncWorker
             var storyCollection = _storyContainer.GetAllStories();
 
             // Loop through stories in the story container
-            foreach (var story in storyCollection)
+            //foreach (var story in storyCollection)
+            while (_lastStoryIndex < storyCollection.Count)
             {
                 ct.ThrowIfCancellationRequested();
+                var story = storyCollection.ElementAt(_lastStoryIndex);
 
                 var storyStatus = GetStoryStatus(story.ID);
 
-                // Skip this story if we're still waiting for the ITU pause to be over
-                if (storyStatus.State == StorySyncWorkerStoryState.WaitingItu)
-                {
-                    if ((DateTime.Now - storyStatus.LastItu) > new TimeSpan(0, 0, GetSettings().ItuPauseDuration))
-                    {
-                        _log.Debug($"Still waiting for ITU cooldown: {story.ID}");
-                        continue;
-                    }
-                }
-
-                // Update story's status, mark as in progress
-                SetStoryStatusState(story.ID, StorySyncWorkerStoryState.Working);
-                this.SetStoryStatusProgress(story.ID, 0, 0);
-
-                // Catch specific exceptions
                 try
                 {
-                    if (CheckIfStoryInfoNeedsSync(story))
+                    // Skip this story if we're still waiting for the ITU pause to be over
+                    if (storyStatus.State == StorySyncWorkerStoryState.WaitingItu)
                     {
-                        this.SetCurrentStatus(StorySyncWorkerState.WorkingStory, $"Updating story info: {story.ID}");
-                        await SyncStoryInfo(story);
+                        var ituPauseDuration = GetSettings().ItuPauseDuration;
+                        if ((storyStatus.LastItu + new TimeSpan(0, 0, ituPauseDuration)) > DateTime.Now) // if the last ITU + the pause duration is in the future
+                        {
+                            int secondsLeft = Convert.ToInt32((storyStatus.LastItu + new TimeSpan(0, 0, ituPauseDuration) - DateTime.Now).TotalSeconds);
+                            _log.Debug($"Still waiting for ITU cooldown for '{story.ID}', {secondsLeft}s remaining.");
+                            continue;
+                        }
                     }
 
-                    if (CheckIfChapterOutlineNeedsSync(story))
+                    // Skip this story if it has an error
+                    if (storyStatus.State == StorySyncWorkerStoryState.Error)
                     {
-                        this.SetCurrentStatus(StorySyncWorkerState.WorkingOutline, $"Updating chapter outline: {story.ID}");
-                        await SyncStoryChapterList(story);
+                        _log.Debug($"Skipping story which has experienced an error: {story.ID}");
+                        continue;
                     }
 
-                    // Build a list of chapters that need updating
-                    this.SetCurrentStatus(StorySyncWorkerState.WorkingStory, $"Checking for any chapters that need syncing: {story.ID}");
-                    List<WdcInteractiveChapter> chaptersToSync = new List<WdcInteractiveChapter>();
-                    foreach (var chapter in story.Chapters)
-                    {
-                        if (CheckIfChapterNeedsSync(chapter)) chaptersToSync.Add(chapter);
-                    }
-
-                    ct.ThrowIfCancellationRequested();
-
-                    // Start syncing the chapters
-                    for (var i = 0; i < chaptersToSync.Count; i++)
-                    {
-                        var chapter = chaptersToSync[i];
-
-                        // Update status
-
-                        this.SetCurrentStatus(StorySyncWorkerState.WorkingChapter, $"Updating story chapter: {story.ID}, {chapter.Path}");
-                        SetStoryStatusProgress(story.ID, story.Chapters.Count - i, story.Chapters.Count);
-
-                        // Sync the chapter
-                        await SyncChapter(story, chapter);
-                    }
-
-                    // Done sync for this story. Mark story status as idle
-                    SetStoryStatusState(story.ID, StorySyncWorkerStoryState.Idle);
-                } // End of try block
-                catch (InteractivesTemporarilyUnavailableException)
+                    // Lets do it
+                    await SyncStory(story);
+                }
+                finally
                 {
-                    _log.Info($"Encountered ITU message for story: ${story.ID}");
-                    SetStoryStatusState(story.ID, StorySyncWorkerStoryState.WaitingItu);
+                    // Always up the index 
+                    _lastStoryIndex++; // Up the index by 1
                 }
             } // End of story loop block
 
+            _lastStoryIndex = 0; // Reset the index if we're at the end of the story collection
 
+            SetCurrentStatus(StorySyncWorkerState.Idle, "Idle", string.Empty);
         }
 
-        private bool CheckIfStoryInfoNeedsSync(WdcInteractiveStory story)
+        public bool CheckIfStoryInfoNeedsSync(WdcInteractiveStory story)
         {
-            return (story.LastUpdatedInfo <= DateTime.Now + new TimeSpan(0, 0, GetSettings().SyncStoryIntervalSeconds, 0));
+            return (story.LastUpdatedInfo + new TimeSpan(0, 0, GetSettings().SyncStoryIntervalSeconds, 0) < DateTime.Now);
         }
 
-        private bool CheckIfChapterNeedsSync(WdcInteractiveChapter chapter)
+        public bool CheckIfChapterNeedsSync(WdcInteractiveChapter chapter)
         {
             return chapter.LastSynced == DateTime.MinValue
-                || (GetSettings().UpdateKnownChapters && chapter.LastSynced <= DateTime.Now + new TimeSpan(0, 0, GetSettings().SyncChapterIntervalSeconds, 0));
+                || (GetSettings().UpdateKnownChapters && DateTime.Now >= chapter.LastSynced + new TimeSpan(0, 0, GetSettings().SyncChapterIntervalSeconds, 0));
         }
 
-        private bool CheckIfChapterOutlineNeedsSync(WdcInteractiveStory story)
+        public bool CheckIfChapterOutlineNeedsSync(WdcInteractiveStory story)
         {
-            return story.LastUpdatedChapterOutline <= DateTime.Now + new TimeSpan(0, 0, GetSettings().SyncChapterOutlineIntervalSeconds, 0);
+            return (story.LastUpdatedChapterOutline + new TimeSpan(0, 0, GetSettings().SyncChapterOutlineIntervalSeconds, 0) < DateTime.Now);
+        }
+
+        private async Task SyncStory(WdcInteractiveStory story)
+        {
+            var ct = _ctSource.Token;
+
+            // Update story's status, mark as in progress
+            //SetStoryStatusState(story.ID, StorySyncWorkerStoryState.Working);
+            SetCurrentStatus(StorySyncWorkerState.WorkingStory, $"Working on story: {story.ID}", story.ID);
+            //SetStoryStatusProgress(story.ID, 0, 0);
+
+            // Catch specific exceptions
+            try
+            {
+                if (CheckIfStoryInfoNeedsSync(story))
+                {
+                    SetCurrentStatus(StorySyncWorkerState.WorkingStory, $"Updating story info: {story.ID}", story.ID);
+                    await SyncStoryInfo(story);
+                }
+                else
+                {
+                    _log.Debug("Story info does not need updating");
+                }
+
+                if (CheckIfChapterOutlineNeedsSync(story))
+                {
+                    SetCurrentStatus(StorySyncWorkerState.WorkingOutline, $"Updating chapter outline: {story.ID}", story.ID);
+                    await SyncStoryChapterList(story);
+                }
+                else
+                {
+                    _log.Debug("Story chapter outline does not need updating");
+                }
+
+                // Build a list of chapters that need updating
+                SetCurrentStatus(StorySyncWorkerState.WorkingStory, $"Checking for any chapters that need syncing: {story.ID}", story.ID);
+                List<WdcInteractiveChapter> chaptersToSync = new List<WdcInteractiveChapter>();
+                foreach (var chapter in story.Chapters)
+                {
+                    if (CheckIfChapterNeedsSync(chapter)) chaptersToSync.Add(chapter);
+                }
+
+                ct.ThrowIfCancellationRequested();
+
+                // If there are no chapters to update, set progress to maximum
+                if (chaptersToSync.Count < 1)
+                    SetStoryStatusProgress(story.ID, story.Chapters.Count, story.Chapters.Count);
+                else
+                    SetStoryStatusState(story.ID, StorySyncWorkerStoryState.Working); // About to start working
+
+
+                // Start syncing the chapters
+                for (var i = 0; i < chaptersToSync.Count; i++)
+                {
+                    var chapter = chaptersToSync[i];
+
+                    // Update status
+
+                    SetCurrentStatus(StorySyncWorkerState.WorkingChapter, $"Updating story chapter: {story.ID}, {chapter.Path}", story.ID);
+                    SetStoryStatusProgress(story.ID, story.Chapters.Count - (chaptersToSync.Count - i), story.Chapters.Count);
+
+                    // Sync the chapter
+                    await SyncChapter(story, chapter);
+
+                    // Save changes after updating the chapter
+                    // TODO: is this too much? updating the entire sory when just a single chapter changes? Will it cause issues with stuff listening for container change events?
+                    _storyContainer.UpdateStory(story); 
+                }
+
+                // Done sync for this story. Mark story status as idle
+                SetStoryStatusState(story.ID, StorySyncWorkerStoryState.Idle);
+                SetCurrentStatus(StorySyncWorkerState.Idle, $"Story update complete: {story.ID}", string.Empty);
+
+            } // End of try block
+            catch (InteractivesTemporarilyUnavailableException)
+            {
+                _log.Info($"Encountered ITU message for story: {story.ID}");
+                SetStoryStatusState(story.ID, StorySyncWorkerStoryState.WaitingItu);
+            }
+            catch (WritingClientHtmlParseException ex)
+            {
+                _log.Warn("", ex);
+
+                // Dump the HTML
+                var dumpFilePath = _fileDumper.DumpFile(ex.Address, ex.HtmlResult);
+
+                // Show an error message
+                var sbExMsg = new StringBuilder();
+                sbExMsg.AppendLine("A HTML parse exception was encountered with the below details:");
+                sbExMsg.AppendLine("======================");
+                sbExMsg.AppendLine(ex.Message);
+                sbExMsg.AppendLine("======================");
+                sbExMsg.AppendLine("The HTML response has been dumped to this location:");
+                sbExMsg.AppendLine(dumpFilePath);
+
+                _gui.ShowMessageBox("HTML parse exception", sbExMsg.ToString(), GuiMessageBoxIcon.Error);
+
+                // Set the story's status to Error, so it doesn't keep trying to sync and cause more errors
+                SetStoryStatusError(story.ID, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _log.Warn($"Encountered unhandled exception while syncing story '{story.ID}'", ex);
+
+                var sb = new StringBuilder();
+                sb.AppendLine(ex.GetType().Name);
+                sb.AppendLine(ex.Message);
+
+                SetStoryStatusError(story.ID, sb.ToString());
+            }
+
+            SetCurrentStatus(StorySyncWorkerState.Idle, $"Story update complete: {story.ID}", string.Empty);
         }
 
         // Update the story details
@@ -401,7 +566,7 @@ namespace WritingExporter.Common.StorySyncWorker
         private async Task SyncStoryChapterList(WdcInteractiveStory story)
         {
             var ct = _ctSource.Token;
-
+            // TODO: should this be here? Isn't this done in the worker main loop?
             this.SetCurrentStatus(StorySyncWorkerState.WorkingOutline, $"Updating story chapter list: {story.ID}");
 
             var remoteChapterList = await _wdcReader.GetInteractiveChapterList(story.ID, _wdcClient, ct);
@@ -424,12 +589,14 @@ namespace WritingExporter.Common.StorySyncWorker
                         LastSynced = DateTime.MinValue
                     };
 
+                    story.Chapters.Add(newChapter);
                 }
             }
 
             ct.ThrowIfCancellationRequested();
 
             // Save changes
+            story.LastUpdatedChapterOutline = DateTime.Now;
             _storyContainer.UpdateStory(story);
         }
 

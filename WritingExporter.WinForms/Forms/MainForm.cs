@@ -11,7 +11,8 @@ using WritingExporter.Common;
 using WritingExporter.Common.Wdc;
 using WritingExporter.Common.Configuration;
 using WritingExporter.Common.Models;
-using WritingExporter.Common.StorySyncWorker;
+using WritingExporter.Common.StorySync;
+using WritingExporter.Common.Storage;
 
 namespace WritingExporter.WinForms.Forms
 {
@@ -27,13 +28,20 @@ namespace WritingExporter.WinForms.Forms
         IStorySyncWorker _syncWorker;
         IConfigProvider _configProvider;
         SimpleInjector.Container _diContainer; // TODO remove dependancy on SimpleInjector to get other forms
+        IStoryFileStore _fileStore;
 
-        public MainForm(IConfigProvider configProvider, IWdcStoryContainer storyContainer, IStorySyncWorker syncWorker, SimpleInjector.Container diContainer)
+        public MainForm(IConfigProvider configProvider,
+            IWdcStoryContainer storyContainer,
+            IStorySyncWorker syncWorker,
+            SimpleInjector.Container diContainer,
+            IStoryFileStore fileStore
+            )
         {
             _configProvider = configProvider;
             _storyContainer = storyContainer;
             _diContainer = diContainer;
             _syncWorker = syncWorker;
+            _fileStore = fileStore;
 
             InitializeComponent();
 
@@ -84,6 +92,7 @@ namespace WritingExporter.WinForms.Forms
         private void OnSyncWorkerStoryStatusEvent(object sender, StorySyncWorkerStoryStatusEventArgs args)
         {
             UpdateStoryStatus(args.NewStatus.StoryID, args.NewStatus);
+
         }
 
         #endregion
@@ -97,6 +106,8 @@ namespace WritingExporter.WinForms.Forms
                 txtConsoleOutput.Invoke(new AppendToConsoleOutputDelegate(AppendToConsoleOutput), new object[] { msg });
                 return;
             }
+
+            if (txtConsoleOutput.IsDisposed) return;
             
             txtConsoleOutput.AppendText(msg + '\n');
 
@@ -179,6 +190,7 @@ namespace WritingExporter.WinForms.Forms
                 if (row.Tag.ToString() == storyID)
                 {
                     UpdateStoryListRowStatus(row, status);
+                    UpdateStoryListRowProgress(row, status);
 
                     return; // Go no further
                 }
@@ -204,18 +216,28 @@ namespace WritingExporter.WinForms.Forms
 
         #region General internal functions
 
+        /// <summary>
+        /// Show the "Add story" form
+        /// </summary>
         private void ShowAddStoryDialog()
         {
             var newStoryForm = _diContainer.GetInstance<AddStoryWdcForm>();
             newStoryForm.ShowDialog(this);
         }
 
+        /// <summary>
+        /// Show the "Edit story" form
+        /// </summary>
         private void ShowAddManualStoryDialog()
         {
             var newStoryForm = _diContainer.GetInstance<EditStoryForm>();
             newStoryForm.ShowDialog(this);
         }
 
+        /// <summary>
+        /// Show the Edit story form.
+        /// </summary>
+        /// <param name="story"></param>
         private void ShowEditStoryForm(WdcInteractiveStory story)
         {
             var editStoryForm = _diContainer.GetInstance<EditStoryForm>();
@@ -223,10 +245,30 @@ namespace WritingExporter.WinForms.Forms
             editStoryForm.ShowDialog(this);
         }
 
+        /// <summary>
+        /// Show the settings form.
+        /// </summary>
         private void ShowSettingsForm()
         {
             var newForm = _diContainer.GetInstance<SettingsForm>();
             newForm.ShowDialog(this);
+        }
+
+        /// <summary>
+        /// Show dialog to export a story to a user-defined location.
+        /// </summary>
+        /// <param name="story"></param>
+        private void ShowExportDialog(WdcInteractiveStory story)
+        {
+            var sfd = new SaveFileDialog();
+            sfd.Filter = $"Story file|{_fileStore.GetDefaultFileSuffix()}";
+            sfd.FileName = _fileStore.GenerateFilename(story);
+            sfd.DefaultExt = _fileStore.GetDefaultFileSuffix();
+            sfd.OverwritePrompt = true;
+            if (sfd.ShowDialog(this) == DialogResult.OK)
+            {
+                _fileStore.SaveStory(story, sfd.FileName);
+            }
         }
 
         private void CheckInitialSetupRequired()
@@ -305,7 +347,7 @@ namespace WritingExporter.WinForms.Forms
                     newTooltip = $"Interactive temporarily unavailable. Last seen at {status.StateLastSet}";
                     break;
                 case StorySyncWorkerStoryState.Working:
-                    newValue = "Working";
+                    newValue = "Syncing";
                     break;
                 case StorySyncWorkerStoryState.Paused:
                     newValue = "Paused";
@@ -356,5 +398,11 @@ namespace WritingExporter.WinForms.Forms
         }
 
         #endregion
+
+        private void miExit_Click(object sender, EventArgs e)
+        {
+            // TODO: Does this need to be sent through the AppCOntext? Should it have an Exit function?
+            this.Close();
+        }
     }
 }

@@ -34,6 +34,6 @@ namespace WritingExporter.Common.Configuration
 
         // How many seconds to not sync anything for that story after an Interactives Temporarily Unavailable message is encountered.
         // Default: 15
-        public int ItuPauseDuration { get; set; }
+        public int ItuPauseDuration { get; set; } = 15;
     }
 }

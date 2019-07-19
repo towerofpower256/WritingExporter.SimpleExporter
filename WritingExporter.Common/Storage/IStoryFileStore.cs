@@ -17,5 +17,6 @@ namespace WritingExporter.Common.Storage
         void SerializeStory(WdcInteractiveStory story, Stream stream);
         string SerializeStoryToString(WdcInteractiveStory story);
         string GenerateFilename(WdcInteractiveStory story);
+        string GetDefaultFileSuffix();
     }
 }

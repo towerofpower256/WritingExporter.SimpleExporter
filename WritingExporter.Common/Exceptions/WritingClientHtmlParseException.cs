@@ -12,6 +12,7 @@ namespace WritingExporter.Common.Exceptions
     class WritingClientHtmlParseException : Exception
     {
         public string HtmlResult { get; private set; }
+        public string Address { get; private set; }
 
         public WritingClientHtmlParseException()
         { }
@@ -24,16 +25,18 @@ namespace WritingExporter.Common.Exceptions
             : base(message, inner)
         { }
 
-        public WritingClientHtmlParseException(string message, string html)
+        public WritingClientHtmlParseException(string message, string html, string address)
             : base(message)
         {
             HtmlResult = html;
+            Address = address;
         }
 
-        public WritingClientHtmlParseException(string message, string html, Exception inner)
+        public WritingClientHtmlParseException(string message, string html, string address, Exception inner)
             : base(message, inner)
         {
             HtmlResult = html;
+            Address = address;
         }
     }
 }

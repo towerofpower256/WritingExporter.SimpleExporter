@@ -10,7 +10,7 @@ using WritingExporter.Common;
 using WritingExporter.Common.Wdc;
 using WritingExporter.Common.Configuration;
 using WritingExporter.Common.Storage;
-using WritingExporter.Common.StorySyncWorker;
+using WritingExporter.Common.StorySync;
 
 namespace WritingExporter.WinForms
 {
@@ -66,6 +66,9 @@ namespace WritingExporter.WinForms
             // Start the GUI
             Application.Run(_container.GetInstance<Forms.MainForm>());
 
+            // Shutdown
+            _log.Info("Shutting down app context");
+
             return this;
         }
 
@@ -76,8 +79,8 @@ namespace WritingExporter.WinForms
             _container.Register<IWdcReader, WdcReader>(Lifestyle.Singleton);
             _container.Register<IStoryFileStore, XmlStoryFileStore>(Lifestyle.Singleton);
             _container.Register<IWdcStoryContainer, WdcStoryContainer>(Lifestyle.Singleton);
-            // _container.Register<IWdcStorySyncWorker, WdcStorySyncWorker>(Lifestyle.Singleton);
-            _container.Register<IStorySyncWorker, DummyStorySyncWorker>(Lifestyle.Singleton);
+            _container.Register<IStorySyncWorker, StorySyncWorker>(Lifestyle.Singleton);
+            //_container.Register<IStorySyncWorker, DummyStorySyncWorker>(Lifestyle.Singleton);
         }
 
         private void RegisterForms()

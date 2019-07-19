@@ -98,7 +98,7 @@ namespace WritingExporter.Common
                         }
                     }
                 }
-                catch (OperationCanceledException ex)
+                catch (OperationCanceledException)
                 {
                     _log.Debug("Stopping save check worker");
                     return;
@@ -133,7 +133,7 @@ namespace WritingExporter.Common
             _log.Debug("Loading all stories");
             foreach (var story in _fileStore.LoadAllStories())
             {
-                AddStory(story);
+                AddStory(story, false);
             }
         }
 
@@ -204,14 +204,24 @@ namespace WritingExporter.Common
         /// Add a story to the container.
         /// </summary>
         /// <param name="newStory"></param>
-        public void AddStory(WdcInteractiveStory newStory)
+        public void AddStory(WdcInteractiveStory newStory, bool needsSave)
         {
+            
             lock (_lock)
             {
-                _AddStory(newStory, true);
+                _AddStory(newStory, needsSave);
             }
 
             DoEvent(newStory.ID, WdcStoryContainerEventType.Add);
+        }
+
+        /// <summary>
+        /// Add a story to the container.
+        /// </summary>
+        /// <param name="newStory"></param>
+        public void AddStory(WdcInteractiveStory newStory)
+        {
+            AddStory(newStory, true);
         }
 
         /// <summary>
@@ -240,19 +250,17 @@ namespace WritingExporter.Common
         {
             lock (_lock)
             {
-                _RemoveStory(storyID);
+                _RemoveStory(storyID, true);
             }
 
             DoEvent(storyID, WdcStoryContainerEventType.Remove);
         }
 
-        private void _RemoveStory(string storyID)
+        private void _RemoveStory(string storyID, bool deleteFile = true)
         {
             var existingStory = _storyCollection.Where(s => s.Story.ID == storyID).SingleOrDefault();
             if (existingStory == null)
                 throw new ArgumentOutOfRangeException($"A story with the ID of '{storyID}' does not exist.");
-
-            DeleteStory(existingStory.Story);
 
             _storyCollection.Remove(existingStory);
         }
@@ -267,7 +275,7 @@ namespace WritingExporter.Common
 
                 // Copy it over, including all the chapters
                 // Remove the old story, add in the replacement
-                _RemoveStory(newStory.ID);
+                _RemoveStory(newStory.ID, false);
                 _AddStory(newStory, true);
             }
 

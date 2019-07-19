@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WritingExporter.Common.StorySyncWorker
+namespace WritingExporter.Common.StorySync
 {
     /// <summary>
     /// The sync status of a story. Used by the sync worker to keep track of the status of a story's sync status and progress.

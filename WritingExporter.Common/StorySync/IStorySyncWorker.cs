@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace WritingExporter.Common.StorySyncWorker
+namespace WritingExporter.Common.StorySync
 {
     public interface IStorySyncWorker
     {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WritingExporter.Common.StorySyncWorker
+namespace WritingExporter.Common.StorySync
 {
     
     [Serializable]
@@ -12,6 +12,7 @@ namespace WritingExporter.Common.StorySyncWorker
     {
         public StorySyncWorkerState State { get; set; } = StorySyncWorkerState.Idle;
         public string Message { get; set; }
+        public string CurrentStoryID { get; set; }
 
         public object Clone()
         {

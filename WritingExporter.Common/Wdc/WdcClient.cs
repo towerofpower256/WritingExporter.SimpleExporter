@@ -194,25 +194,28 @@ namespace WritingExporter.Common.Wdc
         // E.g. https://www.writing.com/main/interact/item_id/209084-Looking-for-adventure
         public Uri GetPathToInteractive(string storyId)
         {
-            return new Uri(GetPathToRoot(), $"/main/interact/item_id/{storyId}");
+            var r = new Uri(GetPathToRoot(), $"/main/interact/item_id/{storyId}");
+            return r;
         }
 
         // E.g. https://www.writing.com/main/interact/item_id/209084-Looking-for-adventure/action/outline
         public Uri GetPathToInteractiveOutline(string storyId)
         {
-            return new Uri(GetPathToInteractive(storyId), "/action/outline");
+            var r = new Uri(GetPathToInteractive(storyId) + "/action/outline");
+            return r;
         }
 
         // E.g. https://www.writing.com/main/interact/item_id/209084-Looking-for-adventure/action/recent_chapters
         public Uri GetPathToInteractiveRecentAdditions(string storyId)
         {
-            return new Uri(GetPathToInteractive(storyId), "/action/recent_chapters");
+            var r = new Uri(GetPathToInteractive(storyId) +  "/action/recent_chapters");
+            return r;
         }
 
         // E.g. https://www.writing.com/main/interact/item_id/209084-Looking-for-adventure/map/1
         public Uri GetPathToInteractiveChapter(string storyId, string chapterId)
         {
-            return new Uri(GetPathToInteractive(storyId), $"/map/{chapterId}");
+            return new Uri(GetPathToInteractive(storyId) + $"/map/{chapterId}");
         }
 
         private async Task<HttpResponseMessage> HttpGetAsync(Uri urlToGet, CancellationToken ct)
