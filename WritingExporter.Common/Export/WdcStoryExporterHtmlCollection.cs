@@ -26,18 +26,27 @@ namespace WritingExporter.Common.Export
         public static ILogger _log = LogManager.GetLogger(typeof(WdcStoryExporterHtmlCollection));
 
         private string _outputDir;
+        private Dictionary<string, string> _chapterPathFilename = new Dictionary<string, string>();
 
-        public WdcStoryExporterHtmlCollection()
+        public WdcStoryExporterHtmlCollection(string outputDir)
         {
-            // DEBUG
-            _outputDir = "";
+            _outputDir = outputDir;
         }
 
-        public void ExportStory(WdcInteractiveStory story, string outputDir)
+        public void ExportStory(WdcInteractiveStory story)
         {
-            _log.InfoFormat("Exporting story '{0}' to path: {1}", story.ID, outputDir);
+            _log.InfoFormat("Exporting story '{0}' to path: {1}", story.ID, _outputDir);
 
-            _outputDir = outputDir;
+            // Create the missing directories, if need be
+            Directory.CreateDirectory(_outputDir);
+
+            // Create the chapter path / chapter filename map.
+            // Not sure, but one day these might not be so simple, like if we hit the filename length limit.
+            _chapterPathFilename = new Dictionary<string, string>();
+            foreach (var chapter in story.Chapters)
+            {
+                _chapterPathFilename.Add(chapter.Path, GetChapterFileName(chapter));
+            }
 
             ExportStoryHomepage(story);
 
@@ -45,7 +54,7 @@ namespace WritingExporter.Common.Export
 
             foreach (var chapter in story.Chapters)
             {
-                ExportStoryChapter(story, chapter);
+                ExportStoryChapter(story, chapter, _chapterPathFilename[chapter.Path]);
             }
         }
 
@@ -58,9 +67,10 @@ namespace WritingExporter.Common.Export
                 .Replace("{StyleData}", GetTemplate("Style.css"))
                 //.Replace("{StoryAuthor}", story.Author.Name) // Author isn't currently supported
                 .Replace("{StoryShortDescription}", story.ShortDescription)
-                .Replace("{StoryDescription}", story.Description);
+                .Replace("{StoryDescription}", story.Description)
+                .Replace("{FirstPageLink}", _chapterPathFilename["1"]);
 
-            var fname = STORY_HOMEPAGE_FILENAME;
+            var fname = GetHomepageFileName();
             File.WriteAllText(Path.Combine(_outputDir, fname), htmlContent);
         }
 
@@ -76,6 +86,7 @@ namespace WritingExporter.Common.Export
                     .Replace("{ChapterPathDisplay}", GetPrettyChapterPath(chapter.Path))
                     .Replace("{ChapterPath}", chapter.Path)
                     .Replace("{ChapterName}", chapter.Title)
+                    .Replace("{ChapterLink}", _chapterPathFilename[chapter.Path])
                     );
             }
 
@@ -84,11 +95,11 @@ namespace WritingExporter.Common.Export
                 .Replace("{StyleData}", GetTemplate("Style.css"))
                 .Replace("{OutlineContent}", htmlStoryOutline.ToString());
 
-            var fname = STORY_OUTLINE_FILENAME;
+            var fname = GetOutlineFileName();
             File.WriteAllText(Path.Combine(_outputDir, fname), htmlContent);
         }
 
-        public void ExportStoryChapter(WdcInteractiveStory story, WdcInteractiveChapter chapter)
+        public void ExportStoryChapter(WdcInteractiveStory story, WdcInteractiveChapter chapter, string filename)
         {
             _log.DebugFormat("Exporting chapter: {0}", chapter.Path);
 
@@ -101,6 +112,11 @@ namespace WritingExporter.Common.Export
                 .Replace("{SourceChapterChunk}", GetPreviousChapterLink(story, chapter))
                 .Replace("{ChapterChoices}", GetChapterChoices(story, chapter))
                 .Replace("{ChapterContent}", chapter.Content);
+
+            // TODO: Fix the "Go back" link
+
+            
+            File.WriteAllText(Path.Combine(_outputDir, filename), htmlContent);
         }
 
         private string GetPreviousChapterLink(WdcInteractiveStory story, WdcInteractiveChapter chapter)
@@ -134,11 +150,22 @@ namespace WritingExporter.Common.Export
                     // Does this choice lead to a valid chapter?
                     bool isChoiceValid = story.Chapters.SingleOrDefault(c => c.Path == choice.PathLink) != null;
 
+                    var choiceHtml = String.Empty;
+
                     // Choice links to a chapter that exists, choice is valid
-                    var choiceTemplate = isChoiceValid ? "ChapterChoiceItemValid.html" : "ChapterChoiceItemInvalid.html";
-                    var choiceHtml = GetTemplate(choiceTemplate)
-                        .Replace("{ChoicePath}", choice.PathLink)
-                        .Replace("{ChoiceName}", choice.Name);
+
+                    if (isChoiceValid && _chapterPathFilename != null)
+                    {
+                        choiceHtml = GetTemplate("ChapterChoiceItemValid.html")
+                            .Replace("{ChoicePath}", choice.PathLink)
+                            .Replace("{ChoiceLink}", _chapterPathFilename[choice.PathLink])
+                            .Replace("{ChoiceName}", choice.Name);
+                    } else
+                    {
+                        // Is either an invalid choice, or the path / filename lookup is missing (could be for a once-off chapter export)
+                        choiceHtml = GetTemplate("ChapterChoiceItemInvalid.html")
+                            .Replace("{ChoiceName}", choice.Name);
+                    }
 
                     sbChapterChoices.AppendLine(choiceHtml);    
                 }
@@ -177,5 +204,30 @@ namespace WritingExporter.Common.Export
         {
             return DataUtil.GetEmbeddedResource(HTML_TEMPLATE_ROOT + name);
         }
+
+        #region Filename generation functions
+
+        public string GetHomepageFileName()
+        {
+            return STORY_HOMEPAGE_FILENAME;
+        }
+
+        public string GetOutlineFileName()
+        {
+            return STORY_OUTLINE_FILENAME;
+        }
+
+        [Obsolete]
+        public string GetChapterFileName()
+        {
+            return string.Format(STORY_CHAPTER_FILENAME, Guid.NewGuid().ToString("N"));
+        }
+
+        public string GetChapterFileName(WdcInteractiveChapter chapter)
+        {
+            return string.Format(STORY_CHAPTER_FILENAME, chapter.Path);
+        }
+
+        #endregion
     }
 }

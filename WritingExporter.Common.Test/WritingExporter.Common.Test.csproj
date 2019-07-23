@@ -62,6 +62,7 @@
     <Compile Include="TestUtil.cs" />
     <Compile Include="FileDumperTest.cs" />
     <Compile Include="StorySyncWorkerTest.cs" />
+    <Compile Include="StoryExportTest.cs" />
     <Compile Include="WdcReaderTests.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -97,6 +98,9 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Data\FileStoreTests\" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Data\SampleStories\1824771-short-stories-by-the-people.xml" />
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

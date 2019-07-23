@@ -7,6 +7,7 @@ using System.IO;
 using WritingExporter.Common.Storage;
 using WritingExporter.Common.Configuration;
 using WritingExporter.Common.Wdc;
+using WritingExporter.Common.Gui;
 
 namespace WritingExporter.Common.Test
 {
@@ -26,7 +27,9 @@ namespace WritingExporter.Common.Test
             var storyContainer = new WdcStoryContainer(fileStore);
             var wdcClient = new WdcClient(config);
             var wdcReader = new WdcReader();
-            var syncWorker = new StorySyncWorker(storyContainer, wdcReader, wdcClient, config);
+            var fileDumper = new FileDumper();
+            var guiContext = new DummyGuiContext();
+            var syncWorker = new StorySyncWorker(storyContainer, wdcReader, wdcClient, config, fileDumper, guiContext);
 
             // Add a story
             storyContainer.AddStory(new WdcInteractiveStory()

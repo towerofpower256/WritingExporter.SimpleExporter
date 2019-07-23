@@ -144,6 +144,7 @@ namespace WritingExporter.Common.Wdc
         // Method 2. Get it from between <big><big><b>...</b></big></big>
         // There are other isntances of the <big><b> tags in use, but only the chapter title gets wrapped in 2x of them
         // Isn't perfect, but until the website layout changes, it'll work
+        // TODO: It doesn't work anymore :( chapter titles aren't being read.
         private string GetInteractiveChapterTitleM2(WdcResponse payload)
         {
             string chapterTitleRegexPattern = @"(?<=<big><big><b>).*?(?=<\/b><\/big><\/big>)";

@@ -51,6 +51,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Gui\DummyGuiContext.cs" />
     <Compile Include="Gui\GuiMessageBoxIcon.cs" />
     <Compile Include="Gui\IGuiContext.cs" />
     <Compile Include="Storage\FileDumper.cs" />
@@ -103,15 +104,15 @@
     <Folder Include="Composition\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Export\HtmlCollectionTemplates\Chapter.html" />
-    <Content Include="Export\HtmlCollectionTemplates\ChapterChoiceEnd.html" />
+    <EmbeddedResource Include="Export\HtmlCollectionTemplates\Chapter.html" />
+    <EmbeddedResource Include="Export\HtmlCollectionTemplates\ChapterChoiceEnd.html" />
     <EmbeddedResource Include="Export\HtmlCollectionTemplates\ChapterChoiceItemInvalid.html" />
     <EmbeddedResource Include="Export\HtmlCollectionTemplates\ChapterChoiceList.html" />
     <EmbeddedResource Include="Export\HtmlCollectionTemplates\ChapterChoiceItemValid.html" />
-    <Content Include="Export\HtmlCollectionTemplates\StoryHomepage.html" />
-    <Content Include="Export\HtmlCollectionTemplates\StoryOutline.html" />
-    <Content Include="Export\HtmlCollectionTemplates\StoryOutlineItem.html" />
-    <Content Include="Export\HtmlCollectionTemplates\style.css" />
+    <EmbeddedResource Include="Export\HtmlCollectionTemplates\StoryHomepage.html" />
+    <EmbeddedResource Include="Export\HtmlCollectionTemplates\StoryOutline.html" />
+    <EmbeddedResource Include="Export\HtmlCollectionTemplates\StoryOutlineItem.html" />
+    <EmbeddedResource Include="Export\HtmlCollectionTemplates\Style.css" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

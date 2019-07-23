@@ -17,7 +17,7 @@ namespace WritingExporter.Common
         {
             var assembly = Assembly.GetExecutingAssembly();
             var resource = resourcePath;
-            //var lolwut = assembly.GetManifestResourceNames();
+            var lolwut = assembly.GetManifestResourceNames();
             using (var stream = assembly.GetManifestResourceStream(resource))
             {
                 if (stream == null)
