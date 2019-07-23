@@ -13,6 +13,7 @@ using WritingExporter.Common.Configuration;
 using WritingExporter.Common.Models;
 using WritingExporter.Common.StorySync;
 using WritingExporter.Common.Storage;
+using System.IO;
 
 namespace WritingExporter.WinForms.Forms
 {
@@ -289,25 +290,20 @@ namespace WritingExporter.WinForms.Forms
             newForm.ShowDialog(this);
         }
 
-        private void ShowExportDialog(string storyID)
+        /// <summary>
+        /// Show dialog to export a story to a user-defined location in the internal storage file format.
+        /// </summary>
+        /// <param name="story"></param>
+        private void ShowExportAsFileDialog(string storyID)
         {
             if (!_storyContainer.HasStory(storyID))
             {
                 MessageBox.Show(this, $"The story '{storyID}' is not in the story container.", "Could not find story", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-            else
-            {
-                ShowExportDialog(_storyContainer.GetStory(storyID));
-            }
-        }
 
-        /// <summary>
-        /// Show dialog to export a story to a user-defined location.
-        /// </summary>
-        /// <param name="story"></param>
-        private void ShowExportDialog(WdcInteractiveStory story)
-        {
+            var story = _storyContainer.GetStory(storyID);
+
             var sfd = new SaveFileDialog();
             sfd.Filter = $"Story file|{_fileStore.GetDefaultFileSuffix()}";
             sfd.FileName = _fileStore.GenerateFilename(story);
@@ -316,6 +312,25 @@ namespace WritingExporter.WinForms.Forms
             if (sfd.ShowDialog(this) == DialogResult.OK)
             {
                 _fileStore.SaveStory(story, sfd.FileName);
+            }
+        }
+
+        private void ShowExportAsHtmlDialog(string storyID)
+        {
+            if (!_storyContainer.HasStory(storyID))
+            {
+                MessageBox.Show(this, $"The story '{storyID}' is not in the story container.", "Could not find story", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var story = _storyContainer.GetStory(storyID);
+
+            var sfd = new FolderBrowserDialog();
+            sfd.Description = "Select a folder to save the story into.";
+            sfd.ShowNewFolderButton = true;
+            if (sfd.ShowDialog(this) == DialogResult.OK)
+            {
+                // TODO finish exporting functionality
             }
         }
 
@@ -339,7 +354,7 @@ namespace WritingExporter.WinForms.Forms
                 {
                     
                     miExportAsFile.Text = "Export story as &file...";
-                    miExportAsFile.Click += new EventHandler((sender, args) => ShowExportDialog(storyIDs[0]));
+                    miExportAsFile.Click += new EventHandler((sender, args) => ShowExportAsFileDialog(storyIDs[0]));
                     
                 }
                 else
@@ -356,8 +371,7 @@ namespace WritingExporter.WinForms.Forms
                 if (storyCount == 1)
                 {
                     miExportAsHtml.Text = "Export story as &HTML...";
-                    //miExportAsHtml.Click += new EventHandler((sender, args) => ShowExportToHtmlDialog(storyIDs)
-                    miExportAsHtml.Enabled = false;
+                    miExportAsHtml.Click += new EventHandler((sender, args) => ShowExportAsHtmlDialog(storyIDs[0]));
                 }
                 else
                 {
