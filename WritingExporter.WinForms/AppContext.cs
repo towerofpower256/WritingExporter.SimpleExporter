@@ -11,6 +11,7 @@ using WritingExporter.Common.Wdc;
 using WritingExporter.Common.Configuration;
 using WritingExporter.Common.Storage;
 using WritingExporter.Common.StorySync;
+using WritingExporter.Common.Gui;
 
 namespace WritingExporter.WinForms
 {
@@ -38,11 +39,14 @@ namespace WritingExporter.WinForms
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
+            // Register system stuff
+            RegisterSystem();
+
             // Add stuff to the container
             RegisterWdc();
 
             // Register all of the forms
-            RegisterForms();
+            RegisterWinForms();
 
             // Validate
             _container.Verify();
@@ -72,20 +76,30 @@ namespace WritingExporter.WinForms
             return this;
         }
 
+        private void RegisterSystem()
+        {
+            _log.Debug("Registering system services");
+            _container.Register<IFileDumper, FileDumper>(Lifestyle.Singleton);
+            _container.Register<IConfigProvider, ConfigProvider>(Lifestyle.Singleton);
+            _container.Register<IStoryFileStore, XmlStoryFileStore>(Lifestyle.Singleton);
+        }
+
         private void RegisterWdc()
         {
-            _container.Register<IConfigProvider, ConfigProvider>(Lifestyle.Singleton);
+            _log.Debug("Registering WDC services");
             _container.Register<IWdcClient, WdcClient>(Lifestyle.Singleton);
             _container.Register<IWdcReader, WdcReader>(Lifestyle.Singleton);
-            _container.Register<IStoryFileStore, XmlStoryFileStore>(Lifestyle.Singleton);
             _container.Register<IWdcStoryContainer, WdcStoryContainer>(Lifestyle.Singleton);
             _container.Register<IStorySyncWorker, StorySyncWorker>(Lifestyle.Singleton);
             //_container.Register<IStorySyncWorker, DummyStorySyncWorker>(Lifestyle.Singleton);
         }
 
-        private void RegisterForms()
+        private void RegisterWinForms()
         {
             _log.Debug("Registering all forms");
+
+            _container.Register<IGuiContext, WinFormsGui>(Lifestyle.Singleton);
+
             foreach (var t in Assembly.GetExecutingAssembly().GetTypes())
             {
                 if (t.IsSubclassOf(typeof(Form)))

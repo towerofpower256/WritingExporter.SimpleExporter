@@ -98,6 +98,41 @@ namespace WritingExporter.WinForms.Forms
         #endregion
 
         #region Form update functions
+
+        private void UpdateStoryInfoTextWithStory(string storyID)
+        {
+            if (!_storyContainer.HasStory(storyID))
+            {
+                txtStoryInfo.Text = $"Story '{storyID}' does not exist in container. Whut?";
+                return;
+            }
+
+            var story = _storyContainer.GetStory(storyID);
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"=== Title: {story.Name}");
+            sb.AppendLine();
+            sb.AppendLine($"=== Short description: {story.ShortDescription}");
+            sb.AppendLine();
+            sb.AppendLine("=== Description:");
+            sb.AppendLine(story.Description.Replace("<br/>", "\r\n").Replace("<br />", "\r\n"));
+
+            UpdateStoryInfoText(sb.ToString());
+        }
+
+        private delegate void UpdateStoryInfoTextDelegate(string txt);
+        private void UpdateStoryInfoText(string txt)
+        {
+            if (txtStoryInfo.InvokeRequired)
+            {
+                txtStoryInfo.Invoke(new UpdateStoryInfoTextDelegate(UpdateStoryInfoText), new object[] { txt });
+                return;
+            }
+            
+            txtStoryInfo.Text = txt;
+
+        }
+
         private delegate void AppendToConsoleOutputDelegate(string msg);
         private void AppendToConsoleOutput(string msg)
         {
@@ -254,6 +289,19 @@ namespace WritingExporter.WinForms.Forms
             newForm.ShowDialog(this);
         }
 
+        private void ShowExportDialog(string storyID)
+        {
+            if (!_storyContainer.HasStory(storyID))
+            {
+                MessageBox.Show(this, $"The story '{storyID}' is not in the story container.", "Could not find story", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            else
+            {
+                ShowExportDialog(_storyContainer.GetStory(storyID));
+            }
+        }
+
         /// <summary>
         /// Show dialog to export a story to a user-defined location.
         /// </summary>
@@ -269,6 +317,74 @@ namespace WritingExporter.WinForms.Forms
             {
                 _fileStore.SaveStory(story, sfd.FileName);
             }
+        }
+
+        private void ShowStoryContextMenu(List<string> storyIDs, Point p)
+        {
+            var ctm = new ContextMenu();
+            var storyCount = storyIDs.Count;
+
+            if (storyCount <= 0)
+            {
+                var emptyItem = new MenuItem();
+                emptyItem.Text = "(empty)";
+                emptyItem.Enabled = false;
+                ctm.MenuItems.Add(emptyItem);
+            }
+            else
+            {
+                // Export story
+                var miExportAsFile = new MenuItem();
+                if (storyCount == 1)
+                {
+                    
+                    miExportAsFile.Text = "Export story as &file...";
+                    miExportAsFile.Click += new EventHandler((sender, args) => ShowExportDialog(storyIDs[0]));
+                    
+                }
+                else
+                {
+                    // TODO support for exporting multiple selected stories
+                    miExportAsFile.Text = "Export stories as &file...";
+                    miExportAsFile.Enabled = false;
+                }
+                ctm.MenuItems.Add(miExportAsFile);
+
+                // Export story as HTML
+                // TODO finish export to HTML functionality
+                var miExportAsHtml = new MenuItem();
+                if (storyCount == 1)
+                {
+                    miExportAsHtml.Text = "Export story as &HTML...";
+                    //miExportAsHtml.Click += new EventHandler((sender, args) => ShowExportToHtmlDialog(storyIDs)
+                    miExportAsHtml.Enabled = false;
+                }
+                else
+                {
+                    miExportAsHtml.Text = "Export stories as &HTML...";
+                    //miExportAsHtml.Click += new EventHandler((sender, args) => ShowExportToHtmlDialog(storyIDs)
+                    miExportAsHtml.Enabled = false;
+                }
+                ctm.MenuItems.Add(miExportAsHtml);
+
+                // Remove story
+                ctm.MenuItems.Add(new MenuItem("-"));
+                var miRemove = new MenuItem();
+                if (storyCount == 1)
+                {
+                    miRemove.Text = "&Remove story";
+                    miRemove.Click += new EventHandler((sender, args) => RemoveStoryWithPrompt(storyIDs[0]));
+                }
+                else
+                {
+                    miRemove.Text = "&Remove stories";
+                    miRemove.Click += new EventHandler((sender, args) => RemoveMultipleStoriesWithPrompt(storyIDs));
+                }
+                ctm.MenuItems.Add(miRemove);
+            }
+
+            // Show it
+            ctm.Show(dgvStories, p, LeftRightAlignment.Right);
         }
 
         private void CheckInitialSetupRequired()
@@ -303,6 +419,35 @@ namespace WritingExporter.WinForms.Forms
         private void RemoveStory(string storyID)
         {
             _storyContainer.RemoveStory(storyID);
+        }
+
+        private void RemoveStoryWithPrompt(string storyID)
+        {
+            if (MessageBox.Show(this, 
+                $"Do you really want to remove the story '{storyID}'?\r\n\r\nThis cannot be undone.",
+                "Remove story confirmation",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question
+                ) == DialogResult.Yes)
+            {
+                RemoveStory(storyID);
+            }
+        }
+
+        private void RemoveMultipleStoriesWithPrompt(IEnumerable<string> storyIDs)
+        {
+            if (MessageBox.Show(this,
+                $"Do you really want to remove the selected stories?\r\n\r\nThis cannot be undone.",
+                "Remove story confirmation",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question
+                ) == DialogResult.Yes)
+            {
+                foreach (string storyID in storyIDs)
+                {
+                    RemoveStory(storyID);
+                }
+            }
         }
 
         // Update a single list row with the sync status from the sync worker
@@ -396,13 +541,37 @@ namespace WritingExporter.WinForms.Forms
         {
             RemoveSelectedStories();
         }
-
-        #endregion
-
+        
         private void miExit_Click(object sender, EventArgs e)
         {
             // TODO: Does this need to be sent through the AppCOntext? Should it have an Exit function?
             this.Close();
+        }
+
+        private void dgvStories_SelectionChanged(object sender, EventArgs e)
+        {
+            if (dgvStories.SelectedRows.Count != 1)
+            {
+                UpdateStoryInfoText(String.Empty);
+            }
+
+            UpdateStoryInfoTextWithStory((string)dgvStories.SelectedRows[0].Tag);
+        }
+
+        #endregion
+
+        private void dgvStories_CellMouseClick(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right && dgvStories.SelectedRows.Count > 0)
+            {
+                var selectedStories = new List<string>();
+                foreach (DataGridViewRow row in dgvStories.SelectedRows)
+                {
+                    selectedStories.Add((string)row.Tag);
+                }
+
+                ShowStoryContextMenu(selectedStories, e.Location);
+            }
         }
     }
 }

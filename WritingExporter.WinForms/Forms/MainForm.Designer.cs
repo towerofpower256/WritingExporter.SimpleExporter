@@ -203,6 +203,8 @@
             this.dgvStories.ShowEditingIcon = false;
             this.dgvStories.Size = new System.Drawing.Size(276, 357);
             this.dgvStories.TabIndex = 0;
+            this.dgvStories.CellMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dgvStories_CellMouseClick);
+            this.dgvStories.SelectionChanged += new System.EventHandler(this.dgvStories_SelectionChanged);
             // 
             // flStoryButtons
             // 
@@ -328,35 +330,35 @@
             this.toolStripSeparator3,
             this.deleteToolStripMenuItem1});
             this.storyContextMenuStrip.Name = "storyContextMenuStrip";
-            this.storyContextMenuStrip.Size = new System.Drawing.Size(181, 120);
+            this.storyContextMenuStrip.Size = new System.Drawing.Size(167, 98);
             // 
             // pauseToolStripMenuItem
             // 
             this.pauseToolStripMenuItem.Name = "pauseToolStripMenuItem";
-            this.pauseToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.pauseToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
             this.pauseToolStripMenuItem.Text = "Pause";
             // 
             // exportToolStripMenuItem
             // 
             this.exportToolStripMenuItem.Name = "exportToolStripMenuItem";
-            this.exportToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.exportToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
             this.exportToolStripMenuItem.Text = "Export...";
             // 
             // exportToHTMLToolStripMenuItem
             // 
             this.exportToHTMLToolStripMenuItem.Name = "exportToHTMLToolStripMenuItem";
-            this.exportToHTMLToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.exportToHTMLToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
             this.exportToHTMLToolStripMenuItem.Text = "Export to &HTML...";
             // 
             // toolStripSeparator3
             // 
             this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(177, 6);
+            this.toolStripSeparator3.Size = new System.Drawing.Size(163, 6);
             // 
             // deleteToolStripMenuItem1
             // 
             this.deleteToolStripMenuItem1.Name = "deleteToolStripMenuItem1";
-            this.deleteToolStripMenuItem1.Size = new System.Drawing.Size(180, 22);
+            this.deleteToolStripMenuItem1.Size = new System.Drawing.Size(166, 22);
             this.deleteToolStripMenuItem1.Text = "Delete";
             // 
             // MainForm
