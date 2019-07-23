@@ -71,6 +71,35 @@ namespace WritingExporter.Common.Test
         }
 
         [TestMethod]
+        public async Task WdcReaderInteractiveChapterLoggedIn()
+        {
+            // Expected results
+            var expectedChapter = new WdcInteractiveChapter();
+            expectedChapter.Path = "1211222";
+            expectedChapter.Title = "Caught and let go";
+            expectedChapter.SourceChoiceTitle = string.Empty;
+            expectedChapter.Content = TestUtil.GetDataFile("expected_set_13_06_2019.WdcReaderInteractiveChapter1_Content.txt");
+            expectedChapter.IsEnd = false;
+            expectedChapter.Author = new WdcAuthor()
+            {
+                Name = "The Nameless Hermit",
+                Username = "blackdragon",
+            };
+            expectedChapter.Choices.Add(new WdcInteractiveChapterChoice() { PathLink = "11", Name = "Be Jace" });
+            expectedChapter.Choices.Add(new WdcInteractiveChapterChoice() { PathLink = "12", Name = "Be Rhea" });
+            expectedChapter.Choices.Add(new WdcInteractiveChapterChoice() { PathLink = "13", Name = "Be Marek" });
+            expectedChapter.Choices.Add(new WdcInteractiveChapterChoice() { PathLink = "14", Name = "Be Tara" });
+
+            WdcResponse payload = new WdcResponse();
+            payload.WebResponse = TestUtil.GetDataFile("sample_set_13_06_2019.Looking for adventure - chapter 1211222 - logged in.html");
+            payload.Address = "https://www.writing.com/main/interact/item_id/209084-Looking-for-adventure/map/1211222";
+
+            WdcInteractiveChapter testChapter = _reader.GetInteractiveChaper("TEST", expectedChapter.Path, payload);
+
+            CompareInteractiveChapters(expectedChapter, testChapter);
+        }
+
+        [TestMethod]
         public async Task WdcReaderInteractiveChapterFirstPageLoggedIn()
         {
             // Expected results
@@ -78,7 +107,7 @@ namespace WritingExporter.Common.Test
             expectedChapter.Path = "1";
             expectedChapter.Title = "The Great War";
             expectedChapter.SourceChoiceTitle = string.Empty;
-            expectedChapter.Content = TestUtil.GetDataFile("expected_set_13_06_2019.WdcReaderInteractiveChapter_Content.txt");
+            expectedChapter.Content = TestUtil.GetDataFile("expected_set_13_06_2019.WdcReaderInteractiveChapter1_Content.txt");
             expectedChapter.IsEnd = false;
             expectedChapter.Author = new WdcAuthor()
             {

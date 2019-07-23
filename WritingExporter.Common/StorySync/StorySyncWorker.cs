@@ -622,8 +622,8 @@ namespace WritingExporter.Common.StorySync
                 chapter.Choices = remoteChapter.Choices;
                 chapter.Content = remoteChapter.Content;
                 chapter.IsEnd = remoteChapter.IsEnd;
-                chapter.SourceChoiceTitle = chapter.SourceChoiceTitle;
-                chapter.Title = chapter.Title;
+                chapter.SourceChoiceTitle = remoteChapter.SourceChoiceTitle;
+                chapter.Title = remoteChapter.Title;
 
                 chapter.LastSynced = DateTime.Now;
             }
