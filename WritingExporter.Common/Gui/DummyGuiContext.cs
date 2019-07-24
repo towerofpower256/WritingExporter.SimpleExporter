@@ -10,6 +10,11 @@ namespace WritingExporter.Common.Gui
     {
         private ILogger _log = LogManager.GetLogger(typeof(DummyGuiContext));
 
+        public void ShellExecute(string command)
+        {
+            _log.Info("ShellExecute");
+        }
+
         public void ShowMessageBox(string title, string message, GuiMessageBoxIcon icon)
         {
             _log.Info("ShowMessageBox");

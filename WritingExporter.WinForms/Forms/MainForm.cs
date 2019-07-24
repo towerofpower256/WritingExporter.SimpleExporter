@@ -14,6 +14,8 @@ using WritingExporter.Common.Models;
 using WritingExporter.Common.StorySync;
 using WritingExporter.Common.Storage;
 using System.IO;
+using WritingExporter.Common.Export;
+using WritingExporter.Common.Gui;
 
 namespace WritingExporter.WinForms.Forms
 {
@@ -30,12 +32,14 @@ namespace WritingExporter.WinForms.Forms
         IConfigProvider _configProvider;
         SimpleInjector.Container _diContainer; // TODO remove dependancy on SimpleInjector to get other forms
         IStoryFileStore _fileStore;
+        IGuiContext _guiContext;
 
         public MainForm(IConfigProvider configProvider,
             IWdcStoryContainer storyContainer,
             IStorySyncWorker syncWorker,
             SimpleInjector.Container diContainer,
-            IStoryFileStore fileStore
+            IStoryFileStore fileStore,
+            IGuiContext guiContext
             )
         {
             _configProvider = configProvider;
@@ -43,6 +47,7 @@ namespace WritingExporter.WinForms.Forms
             _diContainer = diContainer;
             _syncWorker = syncWorker;
             _fileStore = fileStore;
+            _guiContext = guiContext;
 
             InitializeComponent();
 
@@ -251,6 +256,37 @@ namespace WritingExporter.WinForms.Forms
         #endregion
 
         #region General internal functions
+
+        /// <summary>
+        /// Open a story, right from the GUI.
+        /// </summary>
+        /// <param name="storyID"></param>
+        private void OpenStoryToRead(string storyID)
+        {
+            // Method 1: export the story to a staging location, and shell execute to open the index homepage.
+
+            //Get the story
+            if (!_storyContainer.HasStory(storyID))
+            {
+                MessageBox.Show($"The story '{storyID}' could not be found in the story container.");
+                return;
+            }
+
+            // TODO: make this a popup GUI with a progress bar
+            // TODO: Make exporter cancellable
+            // TODO: Make exporter have a progress updater, and expose progress event hooks
+
+            var story = _storyContainer.GetStory(storyID);
+
+            // Export it
+            var tempDir = Path.Combine(Path.GetTempPath(), "WritingExporter", storyID);
+            Directory.CreateDirectory(tempDir);
+            var exporter = new WdcStoryExporterHtmlCollection(tempDir);
+            exporter.ExportStory(story);
+
+            // Open it
+            _guiContext.ShellExecute(Path.Combine(tempDir, exporter.GetHomepageFileName()));
+        }
 
         /// <summary>
         /// Show the "Add story" form
@@ -572,8 +608,6 @@ namespace WritingExporter.WinForms.Forms
             UpdateStoryInfoTextWithStory((string)dgvStories.SelectedRows[0].Tag);
         }
 
-        #endregion
-
         private void dgvStories_CellMouseClick(object sender, DataGridViewCellMouseEventArgs e)
         {
             if (e.Button == MouseButtons.Right && dgvStories.SelectedRows.Count > 0)
@@ -587,5 +621,16 @@ namespace WritingExporter.WinForms.Forms
                 ShowStoryContextMenu(selectedStories, e.Location);
             }
         }
+
+        private void dgvStories_DoubleClick(object sender, EventArgs e)
+        {
+            if (dgvStories.SelectedRows.Count == 1)
+            {
+                var selectedRow = dgvStories.SelectedRows[0];
+                OpenStoryToRead((string)selectedRow.Tag);
+            }
+        }
+
+        #endregion
     }
 }

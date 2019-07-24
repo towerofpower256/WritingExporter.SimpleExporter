@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WritingExporter.Common.Gui;
+using System.Diagnostics;
 
 namespace WritingExporter.WinForms
 {
@@ -57,6 +58,17 @@ namespace WritingExporter.WinForms
             }
 
             MessageBox.Show(null, message, title, MessageBoxButtons.OK, msgBoxIcon);
+        }
+
+        public void ShellExecute(string command)
+        {
+            var process = new Process();
+            var startInfo = new ProcessStartInfo();
+            startInfo.CreateNoWindow = true;
+            startInfo.FileName = "explorer.exe";
+            startInfo.Arguments = $"\"{command}\""; // Wrap the command in quotation
+            process.StartInfo = startInfo;
+            process.Start();
         }
     }
 

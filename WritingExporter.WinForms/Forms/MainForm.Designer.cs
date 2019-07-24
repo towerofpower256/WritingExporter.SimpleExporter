@@ -205,6 +205,7 @@
             this.dgvStories.TabIndex = 0;
             this.dgvStories.CellMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dgvStories_CellMouseClick);
             this.dgvStories.SelectionChanged += new System.EventHandler(this.dgvStories_SelectionChanged);
+            this.dgvStories.DoubleClick += new System.EventHandler(this.dgvStories_DoubleClick);
             // 
             // flStoryButtons
             // 
