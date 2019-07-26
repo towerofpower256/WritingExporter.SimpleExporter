@@ -40,9 +40,6 @@
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.tlStoryPanel = new System.Windows.Forms.TableLayoutPanel();
             this.dgvStories = new System.Windows.Forms.DataGridView();
-            this.flStoryButtons = new System.Windows.Forms.FlowLayoutPanel();
-            this.btnRemoveStory = new System.Windows.Forms.Button();
-            this.btnAddStory = new System.Windows.Forms.Button();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.txtStoryInfo = new System.Windows.Forms.TextBox();
             this.menuStripMain = new System.Windows.Forms.MenuStrip();
@@ -66,7 +63,6 @@
             this.groupBox1.SuspendLayout();
             this.tlStoryPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvStories)).BeginInit();
-            this.flStoryButtons.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.menuStripMain.SuspendLayout();
             this.storyContextMenuStrip.SuspendLayout();
@@ -175,14 +171,13 @@
             // 
             this.tlStoryPanel.ColumnCount = 1;
             this.tlStoryPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tlStoryPanel.Controls.Add(this.dgvStories, 0, 1);
-            this.tlStoryPanel.Controls.Add(this.flStoryButtons, 0, 0);
+            this.tlStoryPanel.Controls.Add(this.dgvStories, 0, 0);
             this.tlStoryPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tlStoryPanel.Location = new System.Drawing.Point(3, 16);
             this.tlStoryPanel.Name = "tlStoryPanel";
-            this.tlStoryPanel.RowCount = 2;
-            this.tlStoryPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
+            this.tlStoryPanel.RowCount = 1;
             this.tlStoryPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tlStoryPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tlStoryPanel.Size = new System.Drawing.Size(282, 379);
             this.tlStoryPanel.TabIndex = 1;
             // 
@@ -195,48 +190,17 @@
             this.dgvStories.BackgroundColor = System.Drawing.SystemColors.Window;
             this.dgvStories.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvStories.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgvStories.Location = new System.Drawing.Point(3, 43);
+            this.dgvStories.Location = new System.Drawing.Point(3, 3);
             this.dgvStories.Name = "dgvStories";
             this.dgvStories.ReadOnly = true;
             this.dgvStories.RowHeadersVisible = false;
             this.dgvStories.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dgvStories.ShowEditingIcon = false;
-            this.dgvStories.Size = new System.Drawing.Size(276, 357);
+            this.dgvStories.Size = new System.Drawing.Size(276, 373);
             this.dgvStories.TabIndex = 0;
             this.dgvStories.CellMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dgvStories_CellMouseClick);
             this.dgvStories.SelectionChanged += new System.EventHandler(this.dgvStories_SelectionChanged);
-            this.dgvStories.DoubleClick += new System.EventHandler(this.dgvStories_DoubleClick);
-            // 
-            // flStoryButtons
-            // 
-            this.flStoryButtons.Controls.Add(this.btnRemoveStory);
-            this.flStoryButtons.Controls.Add(this.btnAddStory);
-            this.flStoryButtons.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.flStoryButtons.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
-            this.flStoryButtons.Location = new System.Drawing.Point(3, 3);
-            this.flStoryButtons.Name = "flStoryButtons";
-            this.flStoryButtons.Size = new System.Drawing.Size(276, 34);
-            this.flStoryButtons.TabIndex = 1;
-            // 
-            // btnRemoveStory
-            // 
-            this.btnRemoveStory.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnRemoveStory.Location = new System.Drawing.Point(243, 3);
-            this.btnRemoveStory.Name = "btnRemoveStory";
-            this.btnRemoveStory.Size = new System.Drawing.Size(30, 30);
-            this.btnRemoveStory.TabIndex = 3;
-            this.btnRemoveStory.Text = "X";
-            this.btnRemoveStory.UseVisualStyleBackColor = true;
-            this.btnRemoveStory.Click += new System.EventHandler(this.btnRemoveStory_Click);
-            // 
-            // btnAddStory
-            // 
-            this.btnAddStory.Location = new System.Drawing.Point(207, 3);
-            this.btnAddStory.Name = "btnAddStory";
-            this.btnAddStory.Size = new System.Drawing.Size(30, 30);
-            this.btnAddStory.TabIndex = 2;
-            this.btnAddStory.Text = "+";
-            this.btnAddStory.UseVisualStyleBackColor = true;
+            this.dgvStories.DoubleClick += new System.EventHandler(this.dgvStories_CellDoubleClick);
             // 
             // groupBox3
             // 
@@ -383,7 +347,6 @@
             this.groupBox1.ResumeLayout(false);
             this.tlStoryPanel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgvStories)).EndInit();
-            this.flStoryButtons.ResumeLayout(false);
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
             this.menuStripMain.ResumeLayout(false);
@@ -403,9 +366,6 @@
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.TextBox txtStoryInfo;
         private System.Windows.Forms.TableLayoutPanel tlStoryPanel;
-        private System.Windows.Forms.FlowLayoutPanel flStoryButtons;
-        private System.Windows.Forms.Button btnAddStory;
-        private System.Windows.Forms.Button btnRemoveStory;
         private System.Windows.Forms.MenuStrip menuStripMain;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem miExit;

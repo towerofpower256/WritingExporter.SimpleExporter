@@ -13,6 +13,9 @@ namespace WritingExporter.Common.StorySync
         StorySyncWorkerSettings GetSettings();
         IEnumerable<StorySyncWorkerStoryStatus> GetAllStoryStatus();
         StorySyncWorkerStoryStatus GetStoryStatus(string storyID);
+        void PauseStorySync(string storyID, bool pause);
+        void ClearStoryError(string storyID);
+        void SyncStoryNow(string storyID);
 
         void StartWorker();
     }

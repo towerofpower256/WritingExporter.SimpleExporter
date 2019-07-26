@@ -220,6 +220,24 @@ namespace WritingExporter.Common.StorySync
             OnStoryStatusChange?.Invoke(this, new StorySyncWorkerStoryStatusEventArgs() { OldStatus = oldStatus, NewStatus = newStatus });
         }
 
+        public void ClearStoryError(string storyID)
+        {
+            // TODO
+            throw new NotImplementedException();
+        }
+
+        public void PauseStorySync(string storyID, bool pause)
+        {
+            // TODO
+            throw new NotImplementedException();
+        }
+
+        public void SyncStoryNow(string storyID)
+        {
+            // TODO
+            throw new NotImplementedException();
+        }
+
         #endregion
 
         #region Worker status stuff

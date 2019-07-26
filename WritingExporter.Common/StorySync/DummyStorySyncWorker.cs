@@ -22,6 +22,11 @@ namespace WritingExporter.Common.StorySync
         public event EventHandler<StorySyncWorkerStatusEventArgs> OnWorkerStatusChange;
         public event EventHandler<StorySyncWorkerStoryStatusEventArgs> OnStoryStatusChange;
 
+        public void ClearStoryError(string storyID)
+        {
+            throw new NotImplementedException();
+        }
+
         public IEnumerable<StorySyncWorkerStoryStatus> GetAllStoryStatus()
         {
             return new StorySyncWorkerStoryStatus[0];
@@ -42,9 +47,19 @@ namespace WritingExporter.Common.StorySync
             return new StorySyncWorkerStoryStatus() { StoryID = storyID };
         }
 
+        public void PauseStorySync(string storyID, bool pause)
+        {
+            throw new NotImplementedException();
+        }
+
         public void StartWorker()
         {
             // Do nothing
+        }
+
+        public void SyncStoryNow(string storyID)
+        {
+            throw new NotImplementedException();
         }
     }
 }

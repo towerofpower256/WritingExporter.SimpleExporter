@@ -645,7 +645,7 @@ namespace WritingExporter.WinForms.Forms
             }
         }
 
-        private void dgvStories_DoubleClick(object sender, EventArgs e)
+        private void dgvStories_CellDoubleClick(object sender, EventArgs e)
         {
             if (dgvStories.SelectedRows.Count == 1)
             {
