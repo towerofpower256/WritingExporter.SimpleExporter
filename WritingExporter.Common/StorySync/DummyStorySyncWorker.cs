@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using WritingExporter.Common.Configuration;
 
 namespace WritingExporter.Common.StorySync
 {
@@ -29,6 +30,11 @@ namespace WritingExporter.Common.StorySync
         public StorySyncWorkerStatus GetCurrentStatus()
         {
             return _status;
+        }
+
+        public StorySyncWorkerSettings GetSettings()
+        {
+            return new StorySyncWorkerSettings();
         }
 
         public StorySyncWorkerStoryStatus GetStoryStatus(string storyID)

@@ -13,6 +13,7 @@ namespace WritingExporter.Common
         WdcInteractiveStory GetStory(string storyID);
         bool HasStory(string storyID);
         void RemoveStory(string storyID);
+        void RemoveAndDeleteStory(string storyID);
         void UpdateStory(WdcInteractiveStory newStory);
         void Start();
     }

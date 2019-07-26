@@ -8,6 +8,7 @@ using System.Xml;
 using WritingExporter.Common.Models;
 using System.IO;
 using System.Collections.ObjectModel;
+using System.Threading;
 
 namespace WritingExporter.Common.Storage
 {
@@ -43,7 +44,7 @@ namespace WritingExporter.Common.Storage
         public void SaveStory(WdcInteractiveStory story, string filePath)
         {
             _log.Debug($"Saving story '{story.ID}' to: {filePath}");
-            
+
             using (var f = File.Open(filePath, FileMode.Create))
             {
                 SerializeStory(story, f);

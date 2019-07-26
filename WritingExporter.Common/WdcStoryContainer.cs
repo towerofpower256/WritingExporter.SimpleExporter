@@ -250,18 +250,29 @@ namespace WritingExporter.Common
         {
             lock (_lock)
             {
+                _RemoveStory(storyID, false);
+            }
+
+            DoEvent(storyID, WdcStoryContainerEventType.Remove);
+        }
+
+        public void RemoveAndDeleteStory(string storyID)
+        {
+            lock (_lock)
+            {
                 _RemoveStory(storyID, true);
             }
 
             DoEvent(storyID, WdcStoryContainerEventType.Remove);
         }
 
-        private void _RemoveStory(string storyID, bool deleteFile = true)
+        private void _RemoveStory(string storyID, bool deleteFile)
         {
             var existingStory = _storyCollection.Where(s => s.Story.ID == storyID).SingleOrDefault();
             if (existingStory == null)
                 throw new ArgumentOutOfRangeException($"A story with the ID of '{storyID}' does not exist.");
 
+            if (deleteFile) DeleteStory(existingStory.Story);
             _storyCollection.Remove(existingStory);
         }
 

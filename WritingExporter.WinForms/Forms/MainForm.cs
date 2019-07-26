@@ -282,7 +282,17 @@ namespace WritingExporter.WinForms.Forms
             var tempDir = Path.Combine(Path.GetTempPath(), "WritingExporter", storyID);
             Directory.CreateDirectory(tempDir);
             var exporter = new WdcStoryExporterHtmlCollection(tempDir);
+
+            var progDialog = new ProgressDialogForm();
+            exporter.OnProgressUpdate += new EventHandler<WdcStoryExporterProgressUpdateArgs>((sender, args) =>
+            {
+                progDialog.UpdateMessage(args.Message);
+                progDialog.UpdateProgress(args.ProgressValue, args.ProgressMax);
+            });
+            progDialog.Show(this);
+            progDialog.Refresh();
             exporter.ExportStory(story);
+            progDialog.CloseForm();
 
             // Open it
             _guiContext.ShellExecute(Path.Combine(tempDir, exporter.GetHomepageFileName()));
@@ -384,6 +394,16 @@ namespace WritingExporter.WinForms.Forms
             }
             else
             {
+                // Open now
+                if (storyCount == 1)
+                {
+                    // Only show option if a single row is selected
+                    var miOpenNow = new MenuItem();
+                    miOpenNow.Text = "Open story &now";
+                    miOpenNow.Click += new EventHandler((sender, args) => OpenStoryToRead(storyIDs[0]));
+                    ctm.MenuItems.Add(miOpenNow);
+                }
+
                 // Export story
                 var miExportAsFile = new MenuItem();
                 if (storyCount == 1)
@@ -434,6 +454,8 @@ namespace WritingExporter.WinForms.Forms
             }
 
             // Show it
+            // TODO: for some reason, the menu opens up in an off-looking position. It's not quite center, it's not quite on the curser
+            // I don't know what coords its trying to use. In theory, it should be opening with the top-left corner on the curser but it's not.
             ctm.Show(dgvStories, p, LeftRightAlignment.Right);
         }
 
@@ -468,7 +490,7 @@ namespace WritingExporter.WinForms.Forms
 
         private void RemoveStory(string storyID)
         {
-            _storyContainer.RemoveStory(storyID);
+            _storyContainer.RemoveAndDeleteStory(storyID);
         }
 
         private void RemoveStoryWithPrompt(string storyID)
@@ -603,6 +625,7 @@ namespace WritingExporter.WinForms.Forms
             if (dgvStories.SelectedRows.Count != 1)
             {
                 UpdateStoryInfoText(String.Empty);
+                return;
             }
 
             UpdateStoryInfoTextWithStory((string)dgvStories.SelectedRows[0].Tag);

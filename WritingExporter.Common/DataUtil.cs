@@ -22,7 +22,7 @@ namespace WritingExporter.Common
             {
                 if (stream == null)
                 {
-                    throw new ArgumentException("Embedded resource not found: " + resourcePath, "fresourcePathilename");
+                    throw new ArgumentException("Embedded resource not found: " + resourcePath, "resourcePath");
                 }
                 else
                 {

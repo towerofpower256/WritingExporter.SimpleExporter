@@ -51,6 +51,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Export\WdcStoryExporterProgressUpdateArgs.cs" />
     <Compile Include="Gui\DummyGuiContext.cs" />
     <Compile Include="Gui\GuiMessageBoxIcon.cs" />
     <Compile Include="Gui\IGuiContext.cs" />
@@ -113,6 +114,13 @@
     <EmbeddedResource Include="Export\HtmlCollectionTemplates\StoryOutline.html" />
     <EmbeddedResource Include="Export\HtmlCollectionTemplates\StoryOutlineItem.html" />
     <EmbeddedResource Include="Export\HtmlCollectionTemplates\Style.css" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Export\HtmlCollectionTemplates\StoryRecentChaptersItem.html" />
+    <EmbeddedResource Include="Export\HtmlCollectionTemplates\StoryRecentChapters.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Export\HtmlCollectionTemplates\PageTemplate.html" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

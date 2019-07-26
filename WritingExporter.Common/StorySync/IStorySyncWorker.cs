@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using WritingExporter.Common.Configuration;
 
 namespace WritingExporter.Common.StorySync
 {
@@ -9,6 +10,7 @@ namespace WritingExporter.Common.StorySync
         event EventHandler<StorySyncWorkerStoryStatusEventArgs> OnStoryStatusChange;
 
         StorySyncWorkerStatus GetCurrentStatus();
+        StorySyncWorkerSettings GetSettings();
         IEnumerable<StorySyncWorkerStoryStatus> GetAllStoryStatus();
         StorySyncWorkerStoryStatus GetStoryStatus(string storyID);
 

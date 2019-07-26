@@ -280,7 +280,7 @@ namespace WritingExporter.Common.StorySync
             }
         }
 
-        private StorySyncWorkerSettings GetSettings()
+        public StorySyncWorkerSettings GetSettings()
         {
             lock (_settingsLock)
             {
@@ -377,6 +377,8 @@ namespace WritingExporter.Common.StorySync
 
                 try
                 {
+                    _log.Debug($"Working story: {story.ID}");
+
                     // Skip this story if we're still waiting for the ITU pause to be over
                     if (storyStatus.State == StorySyncWorkerStoryState.WaitingItu)
                     {
@@ -441,6 +443,7 @@ namespace WritingExporter.Common.StorySync
             {
                 if (CheckIfStoryInfoNeedsSync(story))
                 {
+                    SetStoryStatusState(story.ID, StorySyncWorkerStoryState.Working);
                     SetCurrentStatus(StorySyncWorkerState.WorkingStory, $"Updating story info: {story.ID}", story.ID);
                     await SyncStoryInfo(story);
                 }
@@ -451,6 +454,7 @@ namespace WritingExporter.Common.StorySync
 
                 if (CheckIfChapterOutlineNeedsSync(story))
                 {
+                    SetStoryStatusState(story.ID, StorySyncWorkerStoryState.Working);
                     SetCurrentStatus(StorySyncWorkerState.WorkingOutline, $"Updating chapter outline: {story.ID}", story.ID);
                     await SyncStoryChapterList(story);
                 }
@@ -586,7 +590,8 @@ namespace WritingExporter.Common.StorySync
                     var newChapter = new WdcInteractiveChapter()
                     {
                         Path = chapterPath,
-                        LastSynced = DateTime.MinValue
+                        LastSynced = DateTime.MinValue,
+                        FirstSeen = DateTime.Now
                     };
 
                     story.Chapters.Add(newChapter);

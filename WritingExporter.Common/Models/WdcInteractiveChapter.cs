@@ -19,5 +19,6 @@ namespace WritingExporter.Common.Models
 
         public DateTime LastUpdated { get; set; }
         public DateTime LastSynced { get; set; }
+        public DateTime FirstSeen { get; set; }
     }
 }
