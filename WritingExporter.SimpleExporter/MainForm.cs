@@ -201,8 +201,15 @@ namespace WritingExporter.SimpleExporter
                     UpdateStatusMessage("ERROR");
                     UpdateStatusProgress(0, 1);
 
+                    var sbMsg = new StringBuilder();
+                    sbMsg.AppendLine("An error occurred while trying to parse the HTML response from Writing.com.");
+                    sbMsg.AppendLine();
+                    sbMsg.AppendLine("This can be caused by having the paid feature \"Dynamic Interactives\" enabled. If this is enabled, please disable it in Writing.com.");
+                    sbMsg.AppendLine();
+                    sbMsg.AppendLine("Would you like to see the response?");
+
                     if (MessageBox.Show(
-                        "An error occurred while trying to parse the HTML response from Writing.com.\n\nWould you like to see the HTML response?",
+                        sbMsg.ToString(),
                         "HTML Parse Error",
                         MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation
                         ) == DialogResult.Yes)
