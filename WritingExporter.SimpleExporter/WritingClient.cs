@@ -267,7 +267,7 @@ namespace WritingExporter.SimpleExporter
             // Method 2. Get it from between <big><big><b>...</b></big></big>
             // There are other isntances of the <big><b> tags in use, but only the chapter title gets wrapped in 2x of them
             // Isn't perfect, but until the website layout changes, it'll work
-            string chapterTitleRegexPattern = @"(?<=<big><big><b>).*?(?=<\/b><\/big><\/big>)";
+            string chapterTitleRegexPattern = @"(?<=<span style=""font-size:1.5em;font-weight:bold;"">).+(?=<\/span> &nbsp; <\/span>)";
 
             Regex chapterTitleRegex = new Regex(chapterTitleRegexPattern, RegexOptions.IgnoreCase | RegexOptions.Singleline);
             Match chapterTitleMatch = chapterTitleRegex.Match(chapterHtml);
