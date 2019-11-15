@@ -295,7 +295,7 @@ namespace WritingExporter.SimpleExporter
 
             // Get the author
             // <a title="Username: rpcity Member Since: July 4th, 2002 Click for links!" style="font - size:1em; font - weight:bold; cursor: pointer; ">SmittySmith</a>
-            Regex chapterAuthorChunkRegex = new Regex("<a title=\"Username: .*?<\\/a>", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            Regex chapterAuthorChunkRegex = new Regex("<a title=\" Username: .*?<\\/a>", RegexOptions.IgnoreCase | RegexOptions.Singleline);
             Match chapterAuthorChunkMatch = chapterAuthorChunkRegex.Match(chapterHtml);
             if (!chapterAuthorChunkMatch.Success)
                 throw new WritingClientHtmlParseException($"Couldn't find the HTML chunk containing the author for the interactive chapter '{chapterUrl.ToString()}'", chapterHtml);
