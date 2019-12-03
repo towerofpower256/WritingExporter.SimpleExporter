@@ -278,7 +278,7 @@ namespace WritingExporter.SimpleExporter
 
             // Search for the choice that lead to this chapter
             // This usually has the more fleshed out title, as the legit title can sometimes be truncated
-            Regex chapterSourceChoiceRegex = new Regex(@"(?<=This choice:\s+<b>).*?(?=<\/b>)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            Regex chapterSourceChoiceRegex = new Regex(@"(?<=This choice:\s*<b>).+(?=<\/b>)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
             Match chapterSourceChoiceMatch = chapterSourceChoiceRegex.Match(chapterHtml);
 
             if (!chapterSourceChoiceMatch.Success && chapterUrlParm != "1") // If we can't find it, and it's not the first chapter
@@ -296,7 +296,7 @@ namespace WritingExporter.SimpleExporter
 
             // Get the author
             // <a title="Username: rpcity Member Since: July 4th, 2002 Click for links!" style="font - size:1em; font - weight:bold; cursor: pointer; ">SmittySmith</a>
-            Regex chapterAuthorChunkRegex = new Regex("<a title=\"\\s+Username: .*?<\\/a>", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            Regex chapterAuthorChunkRegex = new Regex("<a title=\"\\s*Username:\\s*.*?<\\/a>", RegexOptions.IgnoreCase | RegexOptions.Singleline);
             Match chapterAuthorChunkMatch = chapterAuthorChunkRegex.Match(chapterHtml);
             if (!chapterAuthorChunkMatch.Success)
                 throw new WritingClientHtmlParseException($"Couldn't find the HTML chunk containing the author for the interactive chapter '{chapterUrl.ToString()}'", chapterHtml);
@@ -322,7 +322,7 @@ namespace WritingExporter.SimpleExporter
                 // Search for the available choices
                 // This one is going to be complicated, because none of the divs or whatnot have ID's
                 // First, get a chunk of the HTML that contains the choices, we'll break them down later
-                Regex chapterChoicesChunkRegex = new Regex("(?<=<b>You've got the following choices?:<\\/b>).+(?=<\\/div><div id=\"end_of_choices\")",
+                Regex chapterChoicesChunkRegex = new Regex("(?<=<b>You've got the following choices?:<\\/b>).+(?=<\\/div><div id=\"end_choices\")",
                     RegexOptions.Singleline | RegexOptions.IgnoreCase);
                 Match chapterChoicesChunkMatch = chapterChoicesChunkRegex.Match(chapterHtml);
                 if (!chapterChoicesChunkMatch.Success)
