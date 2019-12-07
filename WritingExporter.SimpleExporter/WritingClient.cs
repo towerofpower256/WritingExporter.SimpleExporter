@@ -288,11 +288,14 @@ namespace WritingExporter.SimpleExporter
             // Search for the chapter content, the actual writing
             // <div class="KonaBody">stuff goes here</div>
             //Regex chapterContentRegex = new Regex("(?<=<div class=\"KonaBody\">).+?(?=<\\/div>)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
-            Regex chapterContentRegex = new Regex(@"(?<=<div class=""""><span style=""font-size:1\.5em;""><div><span>).+(?=</span></div></span></div></div>)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            Regex chapterContentRegex = new Regex(@"(?<=<div class="""">).+(?=</span></div></div>)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
             Match chapterContentMatch = chapterContentRegex.Match(chapterHtml);
             if (!chapterContentMatch.Success)
                 throw new WritingClientHtmlParseException($"Couldn't find the content for the interactive chapter '{chapterUrl.ToString()}'", chapterHtml);
-            string chapterContent = HttpUtility.HtmlDecode(chapterContentMatch.Value);
+            string chapterContent = HttpUtility.HtmlDecode(chapterContentMatch.Value)
+                .Replace(@"<span style=""font-size:1.5em;""><div><span>", "")
+                .Replace(@"<div><span>", "")
+                .Replace(@"</div></span>", "");
 
             // Get the author
             // <a title="Username: rpcity Member Since: July 4th, 2002 Click for links!" style="font - size:1em; font - weight:bold; cursor: pointer; ">SmittySmith</a>
