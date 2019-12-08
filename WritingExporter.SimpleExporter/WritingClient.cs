@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
@@ -21,10 +21,10 @@ namespace WritingExporter.SimpleExporter
         public Uri WritingUrlRoot { get; set; } = new Uri(DEFAULT_WRITING_ROOT);
          // TODO: proxy support
     }
-    
+
     public class WritingClient
     {
-        
+
         private const string LOGIN_FIELD_NAME_USERNAME = "login_username";
         private const string LOGIN_FIELD_NAME_PASSWORD = "login_password";
         private const string HTTP_SET_COOKIE_HEADER = "Set-Cookie";
@@ -56,7 +56,7 @@ namespace WritingExporter.SimpleExporter
 
         // Regex to detect the "Interactives temporarily unavailable due to resource limitations" message
         private static Regex InteractivesUnavailableRegex1 = new Regex(
-            @"<title>.*(Interactives Temporarily Unavailable|Interactive Stories Are Temporarily Unavailable).*<\/title>",
+            @"<title>.*(Interactives Temporarily Unavailable|Interactive Stories Temporarily Unavailable).*<\/title>",
             RegexOptions.IgnoreCase
             );
 
@@ -132,7 +132,7 @@ namespace WritingExporter.SimpleExporter
             string contentString = await response.Content.ReadAsStringAsync();
             if (FailedLoginRegex.IsMatch(contentString))
                 throw new Exception("Writing.com login failed");
-            
+
 
         }
 
@@ -262,12 +262,13 @@ namespace WritingExporter.SimpleExporter
             // Method 1. Get it from the "Your path to this chapter"
             // CAUTION: can sometimes get truncated, but this appears to be the the legit title from the database, it was truncated when the chapter was made
             // NOTE: Fails on the first chapter, because there's no choices made yet
-            //string chapterTitleRegexPattern = string.Format("(?<=\\/map\\/{0}\">).*?(?=<\\/a>)", chapterUrlParm);
+            // string chapterTitleRegexPattern = string.Format("(?<=\\/map\\/{0}\">).*?(?=<\\/a>)", chapterUrlParm);
 
             // Method 2. Get it from between <big><big><b>...</b></big></big>
+            // <span style="font-size:1.45em;font-weight:bold;">...</span>
             // There are other isntances of the <big><b> tags in use, but only the chapter title gets wrapped in 2x of them
             // Isn't perfect, but until the website layout changes, it'll work
-            string chapterTitleRegexPattern = @"(?<=<span style=""font-size:1.5em;font-weight:bold;"">).+(?=<\/span> &nbsp; <\/span>)";
+            string chapterTitleRegexPattern = @"(?<=<span style=""font-size:1\.45em;font-weight:bold;"">).+(?=</span>\s+&nbsp;\s+</span>)";
 
             Regex chapterTitleRegex = new Regex(chapterTitleRegexPattern, RegexOptions.IgnoreCase | RegexOptions.Singleline);
             Match chapterTitleMatch = chapterTitleRegex.Match(chapterHtml);
@@ -277,7 +278,7 @@ namespace WritingExporter.SimpleExporter
 
             // Search for the choice that lead to this chapter
             // This usually has the more fleshed out title, as the legit title can sometimes be truncated
-            Regex chapterSourceChoiceRegex = new Regex(@"(?<=This choice: <b>).*?(?=<\/b>)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            Regex chapterSourceChoiceRegex = new Regex(@"(?<=This\s*choice:\s*<b>).+(?=</b><span class=""noPrint"">)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
             Match chapterSourceChoiceMatch = chapterSourceChoiceRegex.Match(chapterHtml);
 
             if (!chapterSourceChoiceMatch.Success && chapterUrlParm != "1") // If we can't find it, and it's not the first chapter
@@ -287,22 +288,25 @@ namespace WritingExporter.SimpleExporter
             // Search for the chapter content, the actual writing
             // <div class="KonaBody">stuff goes here</div>
             //Regex chapterContentRegex = new Regex("(?<=<div class=\"KonaBody\">).+?(?=<\\/div>)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
-            Regex chapterContentRegex = new Regex("(?<=<div class=\"\">).+?(?=<\\/div>)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            Regex chapterContentRegex = new Regex(@"(?<=<div class="""">).+(?=</span></div></div>)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
             Match chapterContentMatch = chapterContentRegex.Match(chapterHtml);
             if (!chapterContentMatch.Success)
                 throw new WritingClientHtmlParseException($"Couldn't find the content for the interactive chapter '{chapterUrl.ToString()}'", chapterHtml);
-            string chapterContent = HttpUtility.HtmlDecode(chapterContentMatch.Value);
+            string chapterContent = HttpUtility.HtmlDecode(chapterContentMatch.Value)
+                .Replace(@"<span style=""font-size:1.5em;""><div><span>", "")
+                .Replace(@"<div><span>", "")
+                .Replace(@"</div></span>", "");
 
             // Get the author
             // <a title="Username: rpcity Member Since: July 4th, 2002 Click for links!" style="font - size:1em; font - weight:bold; cursor: pointer; ">SmittySmith</a>
-            Regex chapterAuthorChunkRegex = new Regex("<a title=\" Username: .*?<\\/a>", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            Regex chapterAuthorChunkRegex = new Regex(@"<a title=""\s*Username:\s*.*?</a>", RegexOptions.IgnoreCase | RegexOptions.Singleline);
             Match chapterAuthorChunkMatch = chapterAuthorChunkRegex.Match(chapterHtml);
             if (!chapterAuthorChunkMatch.Success)
                 throw new WritingClientHtmlParseException($"Couldn't find the HTML chunk containing the author for the interactive chapter '{chapterUrl.ToString()}'", chapterHtml);
             string chapterAuthorChunk = chapterAuthorChunkMatch.Value;
 
             // Get the author username
-            Regex chapterAuthorUsernameRegex = new Regex("(?<=Username: )[a-zA-Z]+");
+            Regex chapterAuthorUsernameRegex = new Regex(@"(?<=Username:\s*)[a-zA-Z]+");
             Match chapterAuthorUsernameMatch = chapterAuthorUsernameRegex.Match(chapterAuthorChunk);
             string chapterAuthorUsername = chapterAuthorUsernameMatch.Value;
 
@@ -321,7 +325,7 @@ namespace WritingExporter.SimpleExporter
                 // Search for the available choices
                 // This one is going to be complicated, because none of the divs or whatnot have ID's
                 // First, get a chunk of the HTML that contains the choices, we'll break them down later
-                Regex chapterChoicesChunkRegex = new Regex("(?<=<b>You have the following choice(s)?:<\\/b>).*?(?=<\\/div><div id=\"end_of_choices\")",
+                Regex chapterChoicesChunkRegex = new Regex(@"(?<=<b>You've got the following choice).+(?=</div><div id=""end_choices"")",
                     RegexOptions.Singleline | RegexOptions.IgnoreCase);
                 Match chapterChoicesChunkMatch = chapterChoicesChunkRegex.Match(chapterHtml);
                 if (!chapterChoicesChunkMatch.Success)
@@ -329,7 +333,7 @@ namespace WritingExporter.SimpleExporter
                 string chapterChoicesChunkHtml = chapterChoicesChunkMatch.Value;
 
                 // Then try to get the individual choices
-                Regex chapterChoicesRegex = new Regex("<a .*?href=\".+?\">.+?<\\/a>", RegexOptions.IgnoreCase);
+                Regex chapterChoicesRegex = new Regex(@"<a .*?href="".+?"">.+?</a>", RegexOptions.IgnoreCase);
                 MatchCollection chapterChoicesMatches = chapterChoicesRegex.Matches(chapterChoicesChunkHtml);
                 foreach (Match match in chapterChoicesMatches)
                 {
@@ -338,7 +342,7 @@ namespace WritingExporter.SimpleExporter
                     string choiceName;
 
                     // Get the URL
-                    Regex choiceUrlRegex = new Regex("(?<=href=\").+?(?=\")");
+                    Regex choiceUrlRegex = new Regex(@"(?<=href="").+?(?="")");
                     Match choiceUrlMatch = choiceUrlRegex.Match(match.Value);
                     if (!choiceUrlMatch.Success)
                         throw new WritingClientHtmlParseException($"Could not find the URL of choice '{match.Value}' on interactive chapter '{chapterUrl.ToString()}'", chapterHtml);
@@ -386,7 +390,7 @@ namespace WritingExporter.SimpleExporter
 
         public async Task<WInteractiveStory> GetInteractive(Uri interactiveUrl)
         {
-            
+
             WInteractiveStory newInteractive = new WInteractiveStory();
             log.DebugFormat("Getting interactive story: {0}", interactiveUrl);
 
@@ -424,7 +428,7 @@ namespace WritingExporter.SimpleExporter
             // Previously this has been difficult o pin-point
             // However I found this on 11/01/2019, they've got it in a META tag at the top of the HTML
             // E.g. <META NAME="description" content="How will young James fare alone with his mature, womanly neighbors? ">
-            Regex interactiveShortDescRegex = new Regex("(?<=<META NAME=\"description\" content=\").+?(?=\">)", RegexOptions.IgnoreCase);
+            Regex interactiveShortDescRegex = new Regex("(?<=<META NAME =\"description\" content=\").+?(?=\">)", RegexOptions.IgnoreCase);
             Match interactiveShortDescMatch = interactiveShortDescRegex.Match(interactiveHtml);
             if (!interactiveShortDescMatch.Success)
                 log.Warn($"Couldn't find the short description for interactive story '{interactiveUrl.ToString()}'"); // Just a warning, don't throw an exception over it
@@ -471,7 +475,7 @@ namespace WritingExporter.SimpleExporter
         private bool IsInteractiveChapterEnd(string chapterHtml)
         {
             //Regex chapterEndRegex = new Regex("<big>THE END.<\\/big>");// Turns out this doesn't work, because they HTML tagging is sloppy and overlaps. <i><b>THE END.</i></b>
-            Regex chapterEndRegex = new Regex(">You have come to the end of the story. You can:<\\/");
+            Regex chapterEndRegex = new Regex(">You've come to the end of the story. You can:<\\/");
             return chapterEndRegex.IsMatch(chapterHtml);
         }
 
